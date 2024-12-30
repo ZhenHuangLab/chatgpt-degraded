@@ -2,7 +2,7 @@
 // @name         ChatGPT Degraded
 // @name:zh-CN   ChatGPT 服务降级监控
 // @namespace    https://github.com/lroolle/chatgpt-degraded
-// @version      0.1.0
+// @version      0.2.0
 // @description  Monitor ChatGPT service level, IP quality and PoW difficulty
 // @description:zh-CN  监控 ChatGPT 服务状态、IP 质量和 PoW 难度
 // @author       lroolle
@@ -12,8 +12,8 @@
 // @grant        none
 // @homepageURL  https://github.com/lroolle/chatgpt-degraded
 // @supportURL   https://github.com/lroolle/chatgpt-degraded/issues
-// @updateURL    https://raw.githubusercontent.com/lroolle/chatgpt-degraded/main/src/index.js
-// @downloadURL  https://raw.githubusercontent.com/lroolle/chatgpt-degraded/main/src/index.js
+// @downloadURL https://update.greasyfork.org/scripts/522323/ChatGPT%20Degraded.user.js
+// @updateURL https://update.greasyfork.org/scripts/522323/ChatGPT%20Degraded.meta.js
 // ==/UserScript==
 
 // Reference: https://github.com/KoriIku/chatgpt-degrade-checker (by KoriIku)
@@ -83,7 +83,7 @@
             </div>
             <div class="monitor-item">
                 <div class="monitor-row">
-                    <span class="label" title="OpenAI System Status">Stat</span>
+                    <span class="label" title="OpenAI System Status">Status</span>
                     <a id="status-description" href="https://status.openai.com" target="_blank" class="value">
                         Checking status...
                     </a>
@@ -473,6 +473,8 @@
       const status = data.status;
 
       const statusDescription = document.getElementById("status-description");
+      const statusMonitorItem = statusDescription.closest(".monitor-item");
+      statusMonitorItem.style.display = "block";
 
       if (status) {
         const indicator = status.indicator.toLowerCase();
@@ -491,13 +493,8 @@
     } catch (error) {
       console.error("Error fetching ChatGPT status:", error);
       const statusDescription = document.getElementById("status-description");
-      if (error.name === "AbortError") {
-        statusDescription.textContent = "Check Status";
-      } else {
-        statusDescription.textContent = "Check Status";
-      }
-      statusDescription.style.color = "#e63946";
-      statusDescription.href = "https://chatgpt.com/status";
+      const statusMonitorItem = statusDescription.closest(".monitor-item");
+      statusMonitorItem.style.display = "none";
     }
   }
 
