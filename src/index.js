@@ -348,42 +348,46 @@
       };
     }
 
+    // Clean the difficulty hex string and get its length
     const cleanDifficulty = difficulty.replace("0x", "").replace(/^0+/, "");
     const hexLength = cleanDifficulty.length;
+    const numericDifficulty = parseInt(difficulty.replace("0x", ""), 16);
 
-    if (hexLength <= 2) {
+    // Define risk levels based on hex length
+    // Shorter hex = higher numeric value = lower difficulty = higher risk
+    if (hexLength <= 2) {  // 0x00 to 0xFF
       return {
         color: "#e63946", // Red
-        level: "Hard",
-        ipQuality: "High Risk",
+        level: "Critical",
+        ipQuality: "Very High Risk",
         percentage: 100,
       };
-    } else if (hexLength === 3) {
+    } else if (hexLength <= 3) {  // 0x100 to 0xFFF
       return {
         color: "#FAB12F", // Orange
-        level: "Medium",
-        ipQuality: "Medium",
+        level: "Hard",
+        ipQuality: "High Risk",
         percentage: 75,
       };
-    } else if (hexLength === 4) {
+    } else if (hexLength <= 4) {  // 0x1000 to 0xFFFF
       return {
         color: "#859F3D", // Light Green
-        level: "Easy",
-        ipQuality: "Good",
+        level: "Medium",
+        ipQuality: "Medium Risk",
         percentage: 50,
       };
-    } else if (hexLength === 5) {
+    } else if (hexLength <= 5) {  // 0x10000 to 0xFFFFF
       return {
         color: "#2a9d8f", // Teal
-        level: "Very Easy",
-        ipQuality: "Excellent",
+        level: "Easy",
+        ipQuality: "Low Risk",
         percentage: 25,
       };
-    } else {
+    } else {  // 0x100000 and above
       return {
         color: "#4CAF50", // Green
         level: "Very Easy",
-        ipQuality: "Excellent",
+        ipQuality: "Minimal Risk",
         percentage: 0,
       };
     }
