@@ -2,7 +2,7 @@
 // @name         ChatGPT Degraded
 // @name:zh-CN   ChatGPT 服务降级监控
 // @namespace    https://github.com/lroolle/chatgpt-degraded
-// @version      0.2.0
+// @version      0.2.1
 // @description  Monitor ChatGPT service level, IP quality and PoW difficulty
 // @description:zh-CN  监控 ChatGPT 服务状态、IP 质量和 PoW 难度
 // @author       lroolle
