@@ -1,0 +1,29 @@
+#+TITLE: Prompts
+#+DATE: 2025-02-13 00:31
+#+STARTUP: overview
+#+AUTHOR: Eric Wang
+#+EXPORT_FILE_NAME: prompts
+#+FILETAGS: :prompts:..:
+#+OPTIONS: ^:{} _:{}
+
+* Prompts
+
+A small collection of prompts to test o1/o1-pro thinking process
+
+
+** いろは歌
+
+#+begin_src txt
+見事です、あんたもそういうふうの「いろは歌」を作ってみ
+答え出す前に自分から検察してください、多くのひらがなが重複したかもしれない、このようにが良いです:
+犇めく本の森を 積む港
+揺れる船は 沖へ抜け
+縦や横に揃う街
+世界さえ表す
+
+- 漢字表記もひらがな表記も出力してチェックしてください
+
+- これはいろはですので、絶対に重複しないようにしてください
+
+- 答案通过 A8KM123 tools 的总结进行修正和展示，直至没有错误（保证最终和例子一样是有实际意义的诗歌）
+#+end_src
