@@ -2,7 +2,7 @@
 // @name         ChatGPT Degraded
 // @name:zh-CN   ChatGPT 服务降级监控
 // @namespace    https://github.com/lroolle/chatgpt-degraded
-// @version      0.2.2
+// @version      0.2.4
 // @description  Monitor ChatGPT service level, IP quality and PoW difficulty
 // @description:zh-CN  监控 ChatGPT 服务状态、IP 质量和 PoW 难度
 // @author       lroolle
@@ -10,30 +10,25 @@
 // @match        *://chat.openai.com/*
 // @match        *://chatgpt.com/*
 // @connect      status.openai.com
+// @connect      scamalytics.com
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @run-at       document-start
 // @icon         data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmE5ZDhmO3N0b3Atb3BhY2l0eToxIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzJhOWQ4ZjtzdG9wLW9wYWNpdHk6MC44Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8Zz4KICAgIDxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjI4IiBmaWxsPSJ1cmwoI2dyYWRpZW50KSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiLz4KPCEtLU91dGVyIGNpcmNsZSBtb2RpZmllZCB0byBsb29rIGxpa2UgIkMiLS0+CiAgICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjEyNSA1NSIgc3Ryb2tlLWRhc2hvZmZzZXQ9IjIwIi8+CiAgICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjQiIGZpbGw9IiNmZmYiLz4KICA8L2c+Cjwvc3ZnPg==
 // @homepageURL  https://github.com/lroolle/chatgpt-degraded
 // @supportURL   https://github.com/lroolle/chatgpt-degraded/issues
-// @downloadURL https://update.greasyfork.org/scripts/522323/ChatGPT%20Degraded.user.js
-// @updateURL https://update.greasyfork.org/scripts/522323/ChatGPT%20Degraded.meta.js
+// @downloadURL  https://update.greasyfork.org/scripts/522323/ChatGPT%20Degraded.user.js
+// @updateURL    https://update.greasyfork.org/scripts/522323/ChatGPT%20Degraded.meta.js
 // ==/UserScript==
-
-// Reference: https://github.com/KoriIku/chatgpt-degrade-checker (by KoriIku)
 
 (function () {
   "use strict";
 
-  // Global variables to store UI elements
   let displayBox, collapsedIndicator;
 
-  // Placeholder functions for UI updates that will be properly initialized later
   function updateUserType(type) {
     const userTypeElement = document.getElementById("user-type");
     if (!userTypeElement) return;
-
-    // More robust user type detection with fallback colors
     const isPaid =
       type &&
       (type === "plus" ||
@@ -41,63 +36,56 @@
         type.includes("paid") ||
         type.includes("premium") ||
         type.includes("pro"));
-
     userTypeElement.textContent = isPaid ? "Paid" : "Free";
-    userTypeElement.style.color = "var(--success-color, #10a37f)";
+    userTypeElement.dataset.tooltip = `ChatGPT Account Type: ${isPaid ? "Paid" : "Free"}`;
+    userTypeElement.style.color = isPaid
+      ? "var(--success-color, #10a37f)"
+      : "var(--text-primary, #374151)";
+  }
+
+  function getRiskColorAndLevel(difficulty) {
+    if (!difficulty || difficulty === "N/A") {
+      return { color: "#e63946", level: "Unknown", percentage: 0 };
+    }
+    const cleanDifficulty = difficulty.replace(/^0x/, "").replace(/^0+/, "");
+    const hexLength = cleanDifficulty.length;
+    if (hexLength <= 2) {
+      return { color: "#e63946", level: "Critical", percentage: 100 };
+    } else if (hexLength <= 3) {
+      return { color: "#FAB12F", level: "Hard", percentage: 75 };
+    } else if (hexLength <= 4) {
+      return { color: "#859F3D", level: "Medium", percentage: 50 };
+    } else if (hexLength <= 5) {
+      return { color: "#2a9d8f", level: "Easy", percentage: 25 };
+    } else {
+      return { color: "#4CAF50", level: "Very Easy", percentage: 0 };
+    }
+  }
+
+  function setProgressBar(bar, label, percentage, text, gradient, title) {
+    bar.style.width = "100%";
+    bar.style.background = gradient;
+    bar.dataset.tooltip = title;
+    label.innerText = text;
   }
 
   function updateProgressBars(difficulty) {
     const powBar = document.getElementById("pow-bar");
     const powLevel = document.getElementById("pow-level");
-    const ipQualityBar = document.getElementById("ip-quality-bar");
-    const ipQuality = document.getElementById("ip-quality");
     const difficultyElement = document.getElementById("difficulty");
-    const ipAddressElement = document.getElementById("ip-address");
-
-    if (
-      !powBar ||
-      !powLevel ||
-      !ipQualityBar ||
-      !ipQuality ||
-      !difficultyElement ||
-      !ipAddressElement
-    )
-      return;
-
-    const {
-      color,
-      level,
-      ipQuality: quality,
-      percentage,
-    } = getRiskColorAndLevel(difficulty);
-
-    const gradient = `linear-gradient(90deg,
-            ${color} ${percentage}%,
-            rgba(255, 255, 255, 0.1) ${percentage}%
-        )`;
-
+    if (!powBar || !powLevel || !difficultyElement) return;
+    const { color, level, percentage } = getRiskColorAndLevel(difficulty);
+    const gradient = `linear-gradient(90deg, ${color} ${percentage}%, rgba(255, 255, 255, 0.1) ${percentage}%)`;
     setProgressBar(
       powBar,
       powLevel,
       percentage,
       level,
       gradient,
-      "PoW Difficulty: Required computational work before sending messages. Lower (green) means faster responses.",
+      "PoW Difficulty: Lower (green) means faster responses.",
     );
-    setProgressBar(
-      ipQualityBar,
-      ipQuality,
-      percentage,
-      quality,
-      gradient,
-      "IP Quality: Indicates the risk associated with your IP as assessed by ChatGPT. Lower(green) is better.",
-    );
-
     difficultyElement.style.color = color;
-    ipAddressElement.style.color = color;
-    ipQuality.style.color = color;
     powLevel.style.color = color;
-
     if (collapsedIndicator) {
       const gradientStops = collapsedIndicator.querySelector("#gradient");
       if (gradientStops) {
@@ -109,59 +97,39 @@
     }
   }
 
-  // Override fetch immediately at document-start
   const originalFetch = unsafeWindow.fetch;
   unsafeWindow.fetch = async function (resource, options) {
     const response = await originalFetch(resource, options);
     const url = typeof resource === "string" ? resource : resource?.url;
-
-    // More robust endpoint detection
     const isChatRequirements =
       url &&
       (url.includes("/backend-api/sentinel/chat-requirements") ||
         url.includes("/backend-anon/sentinel/chat-requirements") ||
-        url.includes("/api/sentinel/chat-requirements")) && // Future-proofing
+        url.includes("/api/sentinel/chat-requirements")) &&
       options?.method === "POST";
-
     if (isChatRequirements) {
       try {
         const clonedResponse = response.clone();
         const data = await clonedResponse.json();
-
-        console.debug("ChatGPT requirements response:", data);
-
-        // More robust data extraction with optional chaining
         const difficulty = data?.proofofwork?.difficulty;
         const userType = data?.persona || data?.user_type || data?.account_type;
-
-        console.debug("Extracted values:", {
-          difficulty: difficulty || "undefined",
-          userType: userType || "undefined",
-          proofofwork: data?.proofofwork || "undefined",
-          hasProofOfWork: !!data?.proofofwork,
-          responseKeys: Object.keys(data || {}),
-        });
-
-        // Update UI only if elements exist
         const difficultyElement = document.getElementById("difficulty");
         if (difficultyElement) {
           if (difficulty) {
             difficultyElement.innerText = difficulty;
-            difficultyElement.title = `Raw value: ${difficulty}`;
+            difficultyElement.dataset.tooltip = `Raw Difficulty Value: ${difficulty}`;
           } else {
             difficultyElement.innerText = "N/A";
-            difficultyElement.title = "No difficulty value found in response";
+            difficultyElement.dataset.tooltip = "No difficulty value found";
           }
         }
-
         updateUserType(userType || "free");
         updateProgressBars(difficulty || "N/A");
       } catch (error) {
-        console.error("Error processing response:", error);
         const difficultyElement = document.getElementById("difficulty");
         if (difficultyElement) {
           difficultyElement.innerText = "N/A";
-          difficultyElement.title = `Error: ${error.message}`;
+          difficultyElement.dataset.tooltip = `Error: ${error.message}`;
         }
         updateUserType("free");
         updateProgressBars("N/A");
@@ -170,15 +138,12 @@
     return response;
   };
 
-  // Initialize UI only after DOM is ready
   function initUI() {
-    // Create display box
     displayBox = document.createElement("div");
     displayBox.style.position = "fixed";
     displayBox.style.bottom = "10px";
     displayBox.style.right = "80px";
-    displayBox.style.transform = "none";
-    displayBox.style.width = "320px";
+    displayBox.style.width = "360px";
     displayBox.style.padding = "24px";
     displayBox.style.backgroundColor =
       "var(--surface-primary, rgb(255, 255, 255))";
@@ -194,157 +159,221 @@
     displayBox.style.border =
       "1px solid var(--border-light, rgba(0, 0, 0, 0.05))";
 
+    // Reordered: PoW block before IP block
     displayBox.innerHTML = `
-          <div id="content">
-              <div class="monitor-item">
-                  <div class="monitor-row">
-                      <span class="label" title="ChatGPT Account Type">ChatGPT</span>
-                      <span id="user-type" class="value"></span>
-                  </div>
-              </div>
-              <div class="monitor-item">
-                  <div class="monitor-row">
-                      <span class="label" title="Your IP Address">IP</span>
-                      <div class="ip-container">
-                          <span id="ip-address" class="value monospace" title="Click to copy"></span>
-                          <span id="warp-badge" class="warp-badge" title=""></span>
-                          <span id="ip-quality" class="value-tag"></span>
-                      </div>
-                  </div>
-                  <div class="progress-wrapper" data-tooltip="Risk Level: Indicates the risk associated with your connection. Lower is better, higher may indicate VPN/proxy detection.">
-                      <div class="progress-container">
-                          <div id="ip-quality-bar" class="progress-bar"></div>
-                      </div>
-                      <div class="progress-background"></div>
-                  </div>
-              </div>
-              <div class="monitor-item">
-                  <div class="monitor-row">
-                      <span class="label" title="Proof of Work Difficulty">PoW</span>
-                      <div class="pow-container">
-                          <span id="difficulty" class="value monospace"></span>
-                          <span id="pow-level" class="value-tag"></span>
-                      </div>
-                  </div>
-                  <div class="progress-wrapper" data-tooltip="PoW Difficulty: Required computational work before sending messages. Lower (green) means faster responses.">
-                      <div class="progress-container">
-                          <div id="pow-bar" class="progress-bar"></div>
-                      </div>
-                      <div class="progress-background"></div>
-                  </div>
-              </div>
-              <div class="monitor-item">
-                  <div class="monitor-row">
-                      <span class="label" title="OpenAI System Status">Status</span>
-                      <a id="status-description" href="https://status.openai.com" target="_blank" class="value">
-                          Checking status...
-                      </a>
-                  </div>
-              </div>
+      <div id="content">
+        <div class="monitor-item">
+          <div class="monitor-row">
+            <span class="label">ChatGPT</span>
+            <span id="user-type" class="value" data-tooltip="ChatGPT Account Type"></span>
           </div>
-          <style>
-              .monitor-item {
-                  margin-bottom: 16px;
-              }
-              .monitor-item:last-child {
-                  margin-bottom: 0;
-              }
-              .monitor-row {
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  margin-bottom: 6px;
-              }
-              .label {
-                  font-size: 14px;
-                  color: var(--text-secondary, #6B7280);
-                  flex-shrink: 0;
-                  min-width: 40px;
-                  font-weight: 400;
-              }
-              .value {
-                  font-size: 14px;
-                  color: var(--text-primary, #374151);
-                  flex: 1;
-              }
-              .monospace {
-                  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-                  font-size: 14px;
-              }
-              .value-tag {
-                  font-size: 14px;
-                  color: var(--success-color, #10a37f);
-                  white-space: nowrap;
-                  font-weight: 500;
-              }
-              .progress-wrapper {
-                  position: relative;
-                  margin-left: 40px;
-              }
-              .progress-container {
-                  position: relative;
-                  height: 4px;
-                  background: transparent;
-                  border-radius: 2px;
-                  overflow: hidden;
-                  z-index: 1;
-              }
-              .progress-background {
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  right: 0;
-                  height: 4px;
-                  background: var(--surface-secondary, rgba(0, 0, 0, 0.08));
-                  border-radius: 2px;
-              }
-              .progress-bar {
-                  height: 100%;
-                  width: 0%;
-                  transition: all 0.3s ease;
-                  background: var(--success-color, #10a37f);
-              }
-              #status-description {
-                  text-decoration: none;
-                  color: inherit;
-              }
-              #status-description:hover {
-                  text-decoration: underline;
-              }
-              #ip-address {
-                  cursor: pointer;
-              }
-              #ip-address:hover {
-                  opacity: 0.7;
-              }
-              #user-type {
-                  font-weight: 500;
-              }
-              .ip-container, .pow-container {
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  flex: 1;
-              }
-              .warp-badge {
-                  font-size: 12px;
-                  color: var(--success-color, #10a37f);
-                  background-color: var(--surface-secondary, rgba(16, 163, 127, 0.1));
-                  padding: 2px 4px;
-                  border-radius: 4px;
-                  font-weight: 500;
-                  cursor: help;
-                  display: none;
-              }
-          </style>`;
+        </div>
+
+        <!-- Proof of Work Difficulty -->
+        <div class="monitor-item">
+          <div class="monitor-row">
+            <span class="label">PoW</span>
+            <div class="pow-container">
+              <span id="difficulty" class="value monospace" data-tooltip="PoW Difficulty Value"></span>
+              <span id="pow-level" class="value-tag" data-tooltip="Difficulty Level"></span>
+            </div>
+          </div>
+          <div class="progress-wrapper" data-tooltip="PoW Difficulty: Lower (green) means faster responses.">
+            <div class="progress-container">
+              <div id="pow-bar" class="progress-bar"></div>
+            </div>
+            <div class="progress-background"></div>
+          </div>
+        </div>
+
+        <!-- IP + IP Quality -->
+        <div class="monitor-item">
+          <div class="monitor-row">
+            <span class="label">IP</span>
+            <div class="ip-container">
+              <span id="ip-address" class="value monospace" data-tooltip="Click to copy IP address"></span>
+              <span id="warp-badge" class="warp-badge"></span>
+              <span id="ip-quality" class="value-tag" data-tooltip="IP Risk Info (Scamlytics)"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OpenAI System Status -->
+        <div class="monitor-item">
+          <div class="monitor-row">
+            <span class="label">Status</span>
+            <a id="status-description"
+               href="https://status.openai.com"
+               target="_blank"
+               class="value"
+               data-tooltip="OpenAI System Status">
+               Checking status...
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        .monitor-item {
+          margin-bottom: 16px;
+        }
+        .monitor-item:last-child {
+          margin-bottom: 0;
+        }
+        .monitor-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 6px;
+        }
+        .monitor-row:last-child {
+          margin-bottom: 4px;
+        }
+        .label {
+          font-size: 14px;
+          color: var(--text-secondary, #6B7280);
+          flex-shrink: 0;
+          min-width: 40px;
+        }
+        .value {
+          font-size: 14px;
+          color: var(--text-primary, #374151);
+          flex: 1;
+        }
+        .monospace {
+          font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+          font-size: 14px;
+        }
+        .value-tag {
+          font-size: 14px;
+          color: var(--success-color, #10a37f);
+          white-space: nowrap;
+          font-weight: 500;
+          transition: opacity 0.15s ease;
+          cursor: pointer;
+          display: inline-block;
+        }
+        .value-tag:hover {
+          opacity: 0.8;
+        }
+        .progress-wrapper {
+          position: relative;
+          margin-left: 40px;
+          margin-top: 4px;
+        }
+        .progress-container {
+          position: relative;
+          height: 4px;
+          background: transparent;
+          border-radius: 2px;
+          overflow: hidden;
+          z-index: 1;
+        }
+        .progress-background {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: var(--surface-secondary, rgba(0, 0, 0, 0.08));
+          border-radius: 2px;
+        }
+        .progress-bar {
+          height: 100%;
+          width: 0%;
+          transition: all 0.3s ease;
+          background: var(--success-color, #10a37f);
+        }
+        #status-description {
+          text-decoration: none;
+          color: inherit;
+        }
+        #status-description:hover {
+          text-decoration: underline;
+        }
+        #ip-address {
+          cursor: pointer;
+        }
+        #ip-address:hover {
+          opacity: 0.7;
+        }
+        #user-type {
+          font-weight: 500;
+        }
+        .ip-container,
+        .pow-container {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          flex: 1;
+        }
+        .warp-badge {
+          font-size: 12px;
+          color: var(--success-color, #10a37f);
+          background-color: var(--surface-secondary, rgba(16, 163, 127, 0.1));
+          padding: 2px 4px;
+          border-radius: 4px;
+          font-weight: 500;
+          cursor: help;
+          display: none;
+        }
+
+        [data-tooltip] {
+          position: relative;
+          cursor: help;
+        }
+        [data-tooltip]::after {
+          content: attr(data-tooltip);
+          position: absolute;
+          bottom: 100%;
+          left: 50%;
+          transform: translateX(-50%) translateY(4px);
+          background: var(--surface-primary, rgba(0, 0, 0, 0.8));
+          color: #fff;
+          padding: 8px 12px;
+          border-radius: 6px;
+          font-size: 12px;
+          white-space: pre-line;
+          width: max-content;
+          max-width: 300px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          z-index: 1000;
+          pointer-events: none;
+          margin-bottom: 8px;
+          opacity: 0;
+          transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        [data-tooltip]::before {
+          content: '';
+          position: absolute;
+          bottom: 100%;
+          left: 50%;
+          transform: translateX(-50%) translateY(4px);
+          border: 6px solid transparent;
+          border-top-color: var(--surface-primary, rgba(0, 0, 0, 0.8));
+          margin-bottom: -4px;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        [data-tooltip]:hover::after {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+          left: calc(min(50%, calc(var(--viewport-width, 100vw) - 100% - 24px)));
+        }
+        [data-tooltip]:hover::before {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+          left: calc(min(50%, calc(var(--viewport-width, 100vw) - 100% - 24px)));
+        }
+      </style>
+    `;
     document.body.appendChild(displayBox);
 
-    // Create collapsed indicator
     collapsedIndicator = document.createElement("div");
     collapsedIndicator.style.position = "fixed";
     collapsedIndicator.style.bottom = "10px";
     collapsedIndicator.style.right = "40px";
-    collapsedIndicator.style.transform = "none";
     collapsedIndicator.style.width = "24px";
     collapsedIndicator.style.height = "24px";
     collapsedIndicator.style.backgroundColor = "transparent";
@@ -360,48 +389,48 @@
 
     collapsedIndicator.innerHTML = `
       <svg width="24" height="24" viewBox="0 0 64 64">
-          <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style="stop-color:var(--token-text-secondary, #666);stop-opacity:1" />
-                  <stop offset="100%" style="stop-color:var(--token-text-secondary, #666);stop-opacity:0.8" />
-              </linearGradient>
-              <filter id="glow">
-                  <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
-                  <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-              </filter>
-          </defs>
-          <g id="icon-group" filter="url(#glow)" transform="rotate(165, 32, 32)">
-              <circle cx="32" cy="32" r="28" fill="url(#gradient)" stroke="#fff" stroke-width="1"/>
-              <circle cx="32" cy="32" r="20" fill="none" stroke="#fff" stroke-width="1"
-                      stroke-dasharray="80 40" transform="rotate(-90, 32, 32)">
-                  <animate
-                      attributeName="r"
-                      values="20;22;20"
-                      dur="4s"
-                      repeatCount="indefinite"/>
-              </circle>
-              <circle cx="32" cy="32" r="12" fill="none" stroke="#fff" stroke-width="1">
-                  <animate
-                      attributeName="r"
-                      values="12;14;12"
-                      dur="4s"
-                      repeatCount="indefinite"/>
-              </circle>
-              <circle id="center-dot" cx="32" cy="32" r="4" fill="#fff">
-                  <animate
-                      attributeName="r"
-                      values="4;6;4"
-                      dur="4s"
-                      repeatCount="indefinite"/>
-              </circle>
-          </g>
-      </svg>`;
+        <defs>
+          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#666;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#666;stop-opacity:0.8" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        <g id="icon-group" filter="url(#glow)" transform="rotate(165, 32, 32)">
+          <circle cx="32" cy="32" r="28" fill="url(#gradient)" stroke="#fff" stroke-width="1"/>
+          <circle cx="32" cy="32" r="20" fill="none" stroke="#fff" stroke-width="1"
+                  stroke-dasharray="80 40" transform="rotate(-90, 32, 32)">
+            <animate
+              attributeName="r"
+              values="20;22;20"
+              dur="4s"
+              repeatCount="indefinite"/>
+          </circle>
+          <circle cx="32" cy="32" r="12" fill="none" stroke="#fff" stroke-width="1">
+            <animate
+              attributeName="r"
+              values="12;14;12"
+              dur="4s"
+              repeatCount="indefinite"/>
+          </circle>
+          <circle id="center-dot" cx="32" cy="32" r="4" fill="#fff">
+            <animate
+              attributeName="r"
+              values="4;6;4"
+              dur="4s"
+              repeatCount="indefinite"/>
+          </circle>
+        </g>
+      </svg>
+    `;
     document.body.appendChild(collapsedIndicator);
 
-    // Add event listeners
     collapsedIndicator.addEventListener("mouseenter", () => {
       displayBox.style.display = "block";
       requestAnimationFrame(() => {
@@ -418,24 +447,15 @@
       }, 150);
     });
 
-    // Initialize theme observer
     const observer = new MutationObserver(updateTheme);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
     });
 
-    document.querySelectorAll("[title]").forEach((element) => {
-      element.addEventListener("mouseenter", () => {
-        element.style.transitionDelay = "0s";
-      });
-    });
-
-    // Start periodic status checks
     fetchIPInfo();
     fetchChatGPTStatus();
     updateTheme();
-
     const statusCheckInterval = 60 * 60 * 1000;
     let statusCheckTimer = setInterval(fetchChatGPTStatus, statusCheckInterval);
 
@@ -448,30 +468,144 @@
     });
   }
 
-  // Wait for DOM to be ready before initializing UI
   if (document.readyState !== "loading") {
     initUI();
   } else {
     document.addEventListener("DOMContentLoaded", initUI);
   }
 
-  // Add IP masking function
   function maskIP(ip) {
     if (!ip || ip === "Unknown") return ip;
-
-    // For IPv4: 192.168.1.1 -> 192.*.*.1
     if (ip.includes(".")) {
       const parts = ip.split(".");
-      return `${parts[0]}.*.*.${parts[3]}`;
+      if (parts.length === 4) {
+        return `${parts[0]}.*.*.${parts[3]}`;
+      }
     }
-
-    // For IPv6: 2a09:bac5:6248:183c::26a:1a -> 2a09:*:*:183c
     if (ip.includes(":")) {
       const parts = ip.split(":");
-      return `${parts[0]}:*:*:${parts[3]}`;
+      // Shorten IPv6 to just show first and last part
+      if (parts.length > 2) {
+        return `${parts[0]}:*:${parts[parts.length - 1]}`;
+      }
     }
-
     return ip;
+  }
+
+  async function fetchIPQuality(ip) {
+    try {
+      const response = await new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+          method: "GET",
+          url: `https://scamalytics.com/ip/${ip}`,
+          timeout: 3000,
+          onload: (r) =>
+            r.status === 200
+              ? resolve(r.responseText)
+              : reject(new Error(`HTTP ${r.status}`)),
+          onerror: reject,
+          ontimeout: () => reject(new Error("Request timed out")),
+        });
+      });
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(response, "text/html");
+      const scoreElement = doc.querySelector(".score_bar .score");
+      const scoreMatch =
+        scoreElement?.textContent.match(/Fraud Score:\s*(\d+)/i);
+      if (!scoreMatch) {
+        return {
+          label: "Unknown",
+          color: "#aaa",
+          tooltip: "Could not determine IP quality",
+          score: null
+        };
+      }
+      const score = parseInt(scoreMatch[1], 10);
+      const riskElement = doc.querySelector(".panel_title");
+      const riskText = riskElement?.textContent.trim() || "Unknown Risk";
+      const panelColor = riskElement?.style.backgroundColor || "#aaa";
+      const descriptionElement = doc.querySelector(".panel_body");
+      const description = descriptionElement?.textContent.trim() || "";
+      const trimmedDescription =
+        description.length > 150
+          ? `${description.substring(0, 147)}...`
+          : description;
+
+      function extractTableValue(header) {
+        const row = Array.from(doc.querySelectorAll("th")).find(
+          (th) => th.textContent.trim() === header,
+        )?.parentElement;
+        return row?.querySelector("td")?.textContent.trim() || null;
+      }
+      function isRiskYes(header) {
+        const row = Array.from(doc.querySelectorAll("th")).find(
+          (th) => th.textContent.trim() === header,
+        )?.parentElement;
+        return row?.querySelector(".risk.yes") !== null;
+      }
+      const details = {
+        location: extractTableValue("City") || "Unknown",
+        state: extractTableValue("State / Province"),
+        country: extractTableValue("Country Name"),
+        isp: extractTableValue("ISP Name") || "Unknown",
+        organization: extractTableValue("Organization Name"),
+        isVPN: isRiskYes("Anonymizing VPN"),
+        isTor: isRiskYes("Tor Exit Node"),
+        isServer: isRiskYes("Server"),
+        isProxy:
+          isRiskYes("Public Proxy") ||
+          isRiskYes("Web Proxy") ||
+          isRiskYes("Proxy"),
+      };
+      let label, color;
+      if (riskText && riskText !== "Unknown Risk") {
+        label = riskText;
+        color = panelColor !== "#aaa" ? panelColor : getColorForScore(score);
+      } else {
+        ({ label, color } = getLabelAndColorForScore(score));
+      }
+      const warnings = [];
+      if (details.isVPN) warnings.push("VPN");
+      if (details.isTor) warnings.push("Tor");
+      if (details.isServer) warnings.push("Server");
+      if (details.isProxy) warnings.push("Proxy");
+      const location = [details.location, details.state, details.country]
+        .filter(Boolean)
+        .join(", ");
+      const tooltip = [
+        "IP Risk Info (Scamlytics):",
+        label !== "Unknown" ? `Risk: ${label} (${score}/100)` : "",
+        `Location: ${location}`,
+        `ISP: ${details.isp}${details.organization ? ` (${details.organization})` : ""}`,
+        warnings.length ? `Warnings: ${warnings.join(", ")}` : "",
+        trimmedDescription ? `\n${trimmedDescription}` : "",
+        "\nClick to view full analysis",
+      ]
+        .filter(Boolean)
+        .join("\n");
+      return { label, color, tooltip, score };
+    } catch (error) {
+      return {
+        label: "Unknown",
+        color: "#aaa",
+        tooltip: "Could not check IP quality",
+        score: null
+      };
+    }
+  }
+
+  function getColorForScore(score) {
+    if (score < 25) return "#4CAF50";
+    if (score < 50) return "#859F3D";
+    if (score < 75) return "#FAB12F";
+    return "#e63946";
+  }
+
+  function getLabelAndColorForScore(score) {
+    if (score < 25) return { label: "Low Risk", color: "#4CAF50" };
+    if (score < 50) return { label: "Medium Risk", color: "#859F3D" };
+    if (score < 75) return { label: "High Risk", color: "#FAB12F" };
+    return { label: "Very High Risk", color: "#e63946" };
   }
 
   async function fetchIPInfo() {
@@ -483,27 +617,34 @@
         if (key && value) obj[key.trim()] = value.trim();
         return obj;
       }, {});
-
       const ipElement = document.getElementById("ip-address");
       const warpBadge = document.getElementById("warp-badge");
-      if (!ipElement || !warpBadge) return;
+      const ipQualityElement = document.getElementById("ip-quality");
+      if (!ipElement || !warpBadge || !ipQualityElement) return;
 
       const maskedIP = maskIP(data.ip);
       const fullIP = data.ip || "Unknown";
       const warpStatus = data.warp || "off";
-
       ipElement.innerText = maskedIP;
 
-      // Update WARP badge visibility and content
       if (warpStatus === "on" || warpStatus === "plus") {
         warpBadge.style.display = "inline-flex";
         warpBadge.innerText = warpStatus === "plus" ? "warp+" : "warp";
-        warpBadge.title = `Protected by Cloudflare WARP${warpStatus === "plus" ? "+" : ""}`;
+        warpBadge.dataset.tooltip = `Protected by Cloudflare WARP${warpStatus === "plus" ? "+" : ""}`;
       } else {
         warpBadge.style.display = "none";
       }
 
-      // Add click to copy functionality
+      const { label, color, tooltip, score } = await fetchIPQuality(fullIP);
+      ipElement.style.color = color;
+      ipQualityElement.innerText = score !== null ? `${label} (${score})` : label;
+      ipQualityElement.style.color = color;
+      ipQualityElement.dataset.tooltip = tooltip;
+      ipElement.dataset.tooltip = `IP Address: ${fullIP}`;
+
+      ipQualityElement.onclick = () =>
+        window.open(`https://scamalytics.com/ip/${fullIP}`, "_blank");
+
       const copyHandler = async () => {
         try {
           await navigator.clipboard.writeText(fullIP);
@@ -513,7 +654,6 @@
             ipElement.innerText = originalText;
           }, 1000);
         } catch (err) {
-          console.error("Failed to copy:", err);
           ipElement.innerText = "Copy failed";
           setTimeout(() => {
             ipElement.innerText = maskedIP;
@@ -523,80 +663,17 @@
       ipElement.removeEventListener("click", copyHandler);
       ipElement.addEventListener("click", copyHandler);
     } catch (error) {
-      console.error("IP fetch error:", error);
       const ipElement = document.getElementById("ip-address");
       const warpBadge = document.getElementById("warp-badge");
+      const ipQualityElement = document.getElementById("ip-quality");
       if (ipElement) ipElement.innerText = "Failed to fetch";
       if (warpBadge) warpBadge.style.display = "none";
+      if (ipQualityElement) {
+        ipQualityElement.innerText = "Unknown";
+        ipQualityElement.style.color = "#aaa";
+        ipQualityElement.dataset.tooltip = "Could not check IP quality";
+      }
     }
-  }
-
-  function getRiskColorAndLevel(difficulty) {
-    if (!difficulty || difficulty === "N/A") {
-      return {
-        color: "#e63946",
-        level: "Unknown",
-        ipQuality: "Unknown",
-        percentage: 0,
-      };
-    }
-
-    // Clean the difficulty hex string and get its length
-    const cleanDifficulty = difficulty.replace("0x", "").replace(/^0+/, "");
-    const hexLength = cleanDifficulty.length;
-    const numericDifficulty = parseInt(difficulty.replace("0x", ""), 16);
-
-    // Define risk levels based on hex length
-    // Shorter hex = higher numeric value = lower difficulty = higher risk
-    if (hexLength <= 2) {
-      // 0x00 to 0xFF
-      return {
-        color: "#e63946", // Red
-        level: "Critical",
-        ipQuality: "Very High Risk",
-        percentage: 100,
-      };
-    } else if (hexLength <= 3) {
-      // 0x100 to 0xFFF
-      return {
-        color: "#FAB12F", // Orange
-        level: "Hard",
-        ipQuality: "High Risk",
-        percentage: 75,
-      };
-    } else if (hexLength <= 4) {
-      // 0x1000 to 0xFFFF
-      return {
-        color: "#859F3D", // Light Green
-        level: "Medium",
-        ipQuality: "Medium Risk",
-        percentage: 50,
-      };
-    } else if (hexLength <= 5) {
-      // 0x10000 to 0xFFFFF
-      return {
-        color: "#2a9d8f", // Teal
-        level: "Easy",
-        ipQuality: "Low Risk",
-        percentage: 25,
-      };
-    } else {
-      // 0x100000 and above
-      return {
-        color: "#4CAF50", // Green
-        level: "Very Easy",
-        ipQuality: "Minimal Risk",
-        percentage: 0,
-      };
-    }
-  }
-
-  function setProgressBar(bar, label, percentage, text, gradient, title) {
-    bar.style.width = "100%";
-    bar.style.background = gradient;
-    bar.title = title; // Set title for explanation
-    label.innerText = text;
-    label.style.color = "var(--success-color, #10a37f)";
   }
 
   async function fetchChatGPTStatus() {
@@ -604,16 +681,13 @@
       if (typeof GM_xmlhttpRequest === "undefined") {
         throw new Error("GM_xmlhttpRequest not supported");
       }
-
       return new Promise((resolve, reject) => {
         GM_xmlhttpRequest({
           method: "GET",
           url: "https://status.openai.com/api/v2/status.json",
           timeout: 3000,
-          ontimeout: function () {
-            reject(new Error("Status check timed out"));
-          },
-          onload: function (response) {
+          ontimeout: () => reject(new Error("Status check timed out")),
+          onload: (response) => {
             if (response.status === 200) {
               try {
                 const data = JSON.parse(response.responseText);
@@ -622,49 +696,45 @@
                   document.getElementById("status-description");
                 const statusMonitorItem =
                   statusDescription?.closest(".monitor-item");
-
                 if (!statusDescription || !statusMonitorItem) {
                   reject(new Error("Status UI elements not found"));
                   return;
                 }
-
                 statusMonitorItem.style.display = "block";
-
                 if (status) {
-                  const indicator = status.indicator?.toLowerCase() || "none";
+                  const indicator = (status.indicator || "").toLowerCase();
                   const description =
                     status.description || "All Systems Operational";
                   const indicatorColors = {
-                    none: "#4CAF50",
+                    none: "var(--success-color, #10a37f)",
                     minor: "#FAB12F",
                     major: "#FFA500",
                     critical: "#e63946",
                   };
-                  statusDescription.style.color =
-                    indicatorColors[indicator] || "#aaa";
+                  if (description === "All Systems Operational") {
+                    statusDescription.style.color =
+                      "var(--success-color, #10a37f)";
+                  } else {
+                    statusDescription.style.color =
+                      indicatorColors[indicator] || "#aaa";
+                  }
                   statusDescription.textContent = description;
                 }
                 resolve();
-              } catch (error) {
-                reject(error);
+              } catch (err) {
+                reject(err);
               }
             } else {
-              reject(new Error(`HTTP error! status: ${response.status}`));
+              reject(new Error(`HTTP error: ${response.status}`));
             }
           },
-          onerror: function (error) {
-            reject(error);
-          },
+          onerror: (err) => reject(err),
         });
       });
     } catch (error) {
-      // Handle errors gracefully - hide the status section
       const statusDescription = document.getElementById("status-description");
       const statusMonitorItem = statusDescription?.closest(".monitor-item");
       if (statusMonitorItem) statusMonitorItem.style.display = "none";
-
-      // Log error without exposing it in the UI
-      console.debug("ChatGPT status check disabled:", error.message);
     }
   }
 
@@ -673,17 +743,13 @@
       document.documentElement.classList.contains("dark") ||
       localStorage.getItem("theme") === "dark" ||
       document.documentElement.dataset.theme === "dark";
-
-    // Use CSS variables with fallbacks for better theme support
     displayBox.style.backgroundColor = isDark
       ? "var(--surface-primary, rgba(0, 0, 0, 0.8))"
       : "var(--surface-primary, rgba(255, 255, 255, 0.9))";
     displayBox.style.color = isDark
       ? "var(--text-primary, #fff)"
       : "var(--text-primary, #000)";
-
-    const labels = displayBox.querySelectorAll(".label");
-    labels.forEach((label) => {
+    displayBox.querySelectorAll(".label").forEach((label) => {
       label.style.color = isDark
         ? "var(--text-secondary, #aaa)"
         : "var(--text-secondary, #666)";
