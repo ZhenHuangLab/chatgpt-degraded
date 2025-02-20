@@ -12,17 +12,20 @@ A non-intrusive userscript to monitor ChatGPT service quality, IP status, and Po
   - Real-time OpenAI system status
   - Account type detection (Free/Plus)
   - Service degradation alerts
+  - Visual status indicators
 
 - 🌐 **IP Status**
-  - IP quality assessment
+  - IP quality assessment (via Scamalytics)
   - Cloudflare WARP detection
-  - One-click masked IP copying
+  - IP history tracking (last 10)
   - Risk level visualization
+  - One-click copy history
 
 - ⚡ **PoW Analysis**
   - Real-time difficulty monitoring
   - Visual difficulty indicators
-  - Performance impact assessment
+  - Risk level assessment
+  - Performance impact alerts
 
 ## 📦 Installation
 
@@ -32,7 +35,7 @@ A non-intrusive userscript to monitor ChatGPT service quality, IP status, and Po
    - [Greasemonkey](https://www.greasespot.net/)
 
 2. Install the script:
-   - [Install from Greasy Fork](https://greasyfork.org/scripts/xxx) (Recommended)
+   - [Install from Greasy Fork](https://greasyfork.org/en/scripts/522323-chatgpt-degraded) (Recommended)
    - [Install from GitHub](https://github.com/lroolle/chatgpt-degraded/raw/main/src/index.js)
 
 3. Visit [chat.openai.com](https://chat.openai.com)
@@ -66,3 +69,21 @@ This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE)
 ## 🙏 Credits
 
 Based on [chatgpt-degrade-checker](https://github.com/KoriIku/chatgpt-degrade-checker) by KoriIku.
+
+## 📋 Changelog
+
+### [0.2.5] - 2025-02-20
+- ✨ Added IP history tracking with last 10 IPs
+- 🎨 Enhanced tooltips and risk level display
+- 🔧 Improved IP deduplication logic
+
+### [0.2.4] - 2025-02-13
+- 🎨 Added tooltips and enhanced IP quality check
+- 🔧 Improved monitoring UI and data fetching
+
+### [0.2.1] - 2025-02-10
+- 🔧 Enhanced PoW difficulty assessment
+- 🐛 Fixed risk level calculations
+
+### [0.2.0] - 2024-12-31
+- 🚀 Initial release with basic monitoring

@@ -2,7 +2,7 @@
 // @name         ChatGPT Degraded
 // @name:zh-CN   ChatGPT 服务降级监控
 // @namespace    https://github.com/lroolle/chatgpt-degraded
-// @version      0.2.4
+// @version      0.2.5
 // @description  Monitor ChatGPT service level, IP quality and PoW difficulty
 // @description:zh-CN  监控 ChatGPT 服务状态、IP 质量和 PoW 难度
 // @author       lroolle
@@ -118,6 +118,24 @@
           if (difficulty) {
             difficultyElement.innerText = difficulty;
             difficultyElement.dataset.tooltip = `Raw Difficulty Value: ${difficulty}`;
+            // Update IP log with new PoW difficulty
+            const ipElement = document.getElementById("ip-address");
+            if (ipElement) {
+              const fullIP = ipElement.dataset.fullIp;
+              const ipQualityElement = document.getElementById("ip-quality");
+              const score = ipQualityElement ? parseInt(ipQualityElement.dataset.score) : null;
+              if (fullIP) {
+                const logs = addIPLog(fullIP, score, difficulty);
+                const formattedLogs = formatIPLogs(logs);
+                const ipContainerTooltip = [
+                  "IP History (recent 10):",
+                  formattedLogs,
+                  "\n---",
+                  "Click to copy history"
+                ].join('\n');
+                ipElement.dataset.tooltip = ipContainerTooltip;
+              }
+            }
           } else {
             difficultyElement.innerText = "N/A";
             difficultyElement.dataset.tooltip = "No difficulty value found";
@@ -159,7 +177,6 @@
     displayBox.style.border =
       "1px solid var(--border-light, rgba(0, 0, 0, 0.05))";
 
-    // Reordered: PoW block before IP block
     displayBox.innerHTML = `
       <div id="content">
         <div class="monitor-item">
@@ -206,7 +223,7 @@
                href="https://status.openai.com"
                target="_blank"
                class="value"
-               data-tooltip="OpenAI System Status">
+               data-tooltip="Click to open status.openai.com">
                Checking status...
             </a>
           </div>
@@ -307,6 +324,10 @@
           gap: 6px;
           flex: 1;
         }
+        /* Ensure IP risk level (ip-quality) is right-aligned, just like pow-level */
+        #ip-quality {
+          margin-left: auto;
+        }
         .warp-badge {
           font-size: 12px;
           color: var(--success-color, #10a37f);
@@ -317,7 +338,22 @@
           cursor: help;
           display: none;
         }
-
+        .ip-container .value-tag {
+          padding-right: 0;
+          position: relative;
+        }
+        /* Special handling for IP Risk tooltip */
+        .ip-container .value-tag[data-tooltip]::after {
+          left: auto;
+          right: 0;
+          transform: translateY(4px);
+        }
+        .ip-container .value-tag[data-tooltip]:hover::after {
+          transform: translateY(0);
+          left: auto;
+          right: 0;
+        }
+        /* General tooltip styles */
         [data-tooltip] {
           position: relative;
           cursor: help;
@@ -330,19 +366,26 @@
           transform: translateX(-50%) translateY(4px);
           background: var(--surface-primary, rgba(0, 0, 0, 0.8));
           color: #fff;
-          padding: 8px 12px;
+          padding: 12px 16px;
           border-radius: 6px;
           font-size: 12px;
           white-space: pre-line;
           width: max-content;
-          max-width: 300px;
+          max-width: 600px;
+          min-width: 450px;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
           z-index: 1000;
           pointer-events: none;
           margin-bottom: 8px;
           opacity: 0;
           transition: opacity 0.15s ease, transform 0.15s ease;
+          font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
         }
+        [data-tooltip]:hover::after {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+        /* Arrow styles */
         [data-tooltip]::before {
           content: '';
           position: absolute;
@@ -356,15 +399,27 @@
           opacity: 0;
           transition: opacity 0.15s ease, transform 0.15s ease;
         }
-        [data-tooltip]:hover::after {
-          opacity: 1;
-          transform: translateX(-50%) translateY(0);
-          left: calc(min(50%, calc(var(--viewport-width, 100vw) - 100% - 24px)));
-        }
         [data-tooltip]:hover::before {
           opacity: 1;
-          transform: translateX(-50%) translateY(0);
-          left: calc(min(50%, calc(var(--viewport-width, 100vw) - 100% - 24px)));
+          transform: translateY(0);
+        }
+        /* Special handling for IP Risk tooltip arrow */
+        .ip-container .value-tag[data-tooltip]::before {
+          left: auto;
+          right: 12px;
+          transform: translateY(4px);
+        }
+        .ip-container .value-tag[data-tooltip]:hover::before {
+          transform: translateY(0);
+          left: auto;
+          right: 12px;
+        }
+        /* Ensure tooltips don't get cut off at viewport edges */
+        @media screen and (max-width: 768px) {
+          [data-tooltip]::after {
+            min-width: 300px;
+            max-width: calc(100vw - 48px);
+          }
         }
       </style>
     `;
@@ -608,6 +663,52 @@
     return { label: "Very High Risk", color: "#e63946" };
   }
 
+  function getIPLogs() {
+    try {
+      const logs = localStorage.getItem('chatgpt_ip_logs');
+      return logs ? JSON.parse(logs) : [];
+    } catch (error) {
+      console.error('Error reading IP logs:', error);
+      return [];
+    }
+  }
+
+  function addIPLog(ip, score, difficulty) {
+    try {
+      const logs = getIPLogs();
+      const timestamp = new Date().toISOString();
+      const newLog = { timestamp, ip, score, difficulty };
+      if (logs.length > 0 && logs[0].ip === ip) {
+        logs[0] = newLog;
+      } else {
+        logs.unshift(newLog);
+      }
+      const trimmedLogs = logs.slice(0, 10);
+      localStorage.setItem('chatgpt_ip_logs', JSON.stringify(trimmedLogs));
+      return trimmedLogs;
+    } catch (error) {
+      console.error('Error adding IP log:', error);
+      return [];
+    }
+  }
+
+  function formatIPLogs(logs) {
+    return logs.map(log => {
+      const date = new Date(log.timestamp);
+      const formattedDate = date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+)/, '[$3-$1-$2 $4:$5]');
+      const { color: powColor, level: powLevel } = getRiskColorAndLevel(log.difficulty);
+      const scoreDisplay = log.score !== null && log.score !== undefined ? log.score : 'N/A';
+      return `${formattedDate} ${log.ip}(${scoreDisplay}), ${log.difficulty || 'N/A'}(${powLevel})`;
+    }).join('\n');
+  }
+
   async function fetchIPInfo() {
     try {
       const response = await fetch("https://chatgpt.com/cdn-cgi/trace");
@@ -626,6 +727,7 @@
       const fullIP = data.ip || "Unknown";
       const warpStatus = data.warp || "off";
       ipElement.innerText = maskedIP;
+      ipElement.dataset.fullIp = fullIP;
 
       if (warpStatus === "on" || warpStatus === "plus") {
         warpBadge.style.display = "inline-flex";
@@ -639,17 +741,31 @@
       ipElement.style.color = color;
       ipQualityElement.innerText = score !== null ? `${label} (${score})` : label;
       ipQualityElement.style.color = color;
+      ipQualityElement.dataset.score = score;
+
+      const difficultyElement = document.getElementById("difficulty");
+      const currentDifficulty = difficultyElement?.innerText || "N/A";
+      const logs = addIPLog(fullIP, score, currentDifficulty);
+      const formattedLogs = formatIPLogs(logs);
+      const ipContainerTooltip = [
+        "IP History (recent 10):",
+        formattedLogs,
+        "\n---",
+        "Click to copy full history"
+      ].join('\n');
+      ipElement.dataset.tooltip = ipContainerTooltip;
       ipQualityElement.dataset.tooltip = tooltip;
-      ipElement.dataset.tooltip = `IP Address: ${fullIP}`;
 
       ipQualityElement.onclick = () =>
         window.open(`https://scamalytics.com/ip/${fullIP}`, "_blank");
 
       const copyHandler = async () => {
         try {
-          await navigator.clipboard.writeText(fullIP);
+          const logs = getIPLogs();
+          const formattedHistory = formatIPLogs(logs);
+          await navigator.clipboard.writeText(formattedHistory);
           const originalText = ipElement.innerText;
-          ipElement.innerText = "Copied!";
+          ipElement.innerText = "History copied!";
           setTimeout(() => {
             ipElement.innerText = originalText;
           }, 1000);
