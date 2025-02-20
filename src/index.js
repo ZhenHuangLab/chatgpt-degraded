@@ -2,7 +2,7 @@
 // @name         ChatGPT Degraded
 // @name:zh-CN   ChatGPT 服务降级监控
 // @namespace    https://github.com/lroolle/chatgpt-degraded
-// @version      0.2.5
+// @version      0.2.6
 // @description  Monitor ChatGPT service level, IP quality and PoW difficulty
 // @description:zh-CN  监控 ChatGPT 服务状态、IP 质量和 PoW 难度
 // @author       lroolle
@@ -86,8 +86,21 @@
     );
     difficultyElement.style.color = color;
     powLevel.style.color = color;
+
+    // Update icon animation based on difficulty
     if (collapsedIndicator) {
+      const outerRingAnim = collapsedIndicator.querySelector("#outer-ring-anim");
+      const middleRingAnim = collapsedIndicator.querySelector("#middle-ring-anim");
+      const centerDotAnim = collapsedIndicator.querySelector("#center-dot-anim");
       const gradientStops = collapsedIndicator.querySelector("#gradient");
+
+      // Adjust animation speed based on difficulty level
+      const animationSpeed = percentage / 25; // 0-4 scale
+      if (outerRingAnim) outerRingAnim.setAttribute("dur", `${4/animationSpeed}s`);
+      if (middleRingAnim) middleRingAnim.setAttribute("dur", `${2/animationSpeed}s`);
+      if (centerDotAnim) centerDotAnim.setAttribute("dur", `${1/animationSpeed}s`);
+
+      // Update color
       if (gradientStops) {
         gradientStops.innerHTML = `
           <stop offset="0%" style="stop-color:${color};stop-opacity:1" />
@@ -461,25 +474,25 @@
           <circle cx="32" cy="32" r="28" fill="url(#gradient)" stroke="#fff" stroke-width="1"/>
           <circle cx="32" cy="32" r="20" fill="none" stroke="#fff" stroke-width="1"
                   stroke-dasharray="80 40" transform="rotate(-90, 32, 32)">
-            <animate
-              attributeName="r"
-              values="20;22;20"
-              dur="4s"
-              repeatCount="indefinite"/>
+            <animate attributeName="stroke-dashoffset"
+                     dur="4s"
+                     values="0;120"
+                     repeatCount="indefinite"
+                     id="outer-ring-anim"/>
           </circle>
           <circle cx="32" cy="32" r="12" fill="none" stroke="#fff" stroke-width="1">
-            <animate
-              attributeName="r"
-              values="12;14;12"
-              dur="4s"
-              repeatCount="indefinite"/>
+            <animate attributeName="r"
+                     dur="2s"
+                     values="12;14;12"
+                     repeatCount="indefinite"
+                     id="middle-ring-anim"/>
           </circle>
           <circle id="center-dot" cx="32" cy="32" r="4" fill="#fff">
-            <animate
-              attributeName="r"
-              values="4;6;4"
-              dur="4s"
-              repeatCount="indefinite"/>
+            <animate attributeName="r"
+                     dur="1s"
+                     values="4;5;4"
+                     repeatCount="indefinite"
+                     id="center-dot-anim"/>
           </circle>
         </g>
       </svg>
