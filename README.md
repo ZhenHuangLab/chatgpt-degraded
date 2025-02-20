@@ -1,31 +1,45 @@
 # ChatGPT Degraded
 
-A non-intrusive userscript to monitor ChatGPT service quality, IP status, and PoW difficulty.
+A non-intrusive userscript to monitor ChatGPT service quality, IP status, and PoW difficulty. It helps users understand their ChatGPT experience by tracking service performance, IP quality, and Proof of Work challenges in real-time.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/lroolle/chatgpt-degraded/main/assets/screenshot.png" width="360" alt="Screenshot">
 </p>
 
+## 🔍 How It Works
+
+The script monitors three key aspects of your ChatGPT experience:
+
+1. **Service Status**: Checks OpenAI's system status and your account type (Free/Plus) to detect service degradation
+2. **IP Quality**: Analyzes your IP using Scamalytics to assess risk level and detect VPN/proxy usage
+3. **PoW Difficulty**: Monitors ChatGPT's Proof of Work challenges to gauge response times and performance
+
+All monitoring is done locally with minimal overhead. The script appears as a small indicator dot that expands into a detailed panel on hover.
+
 ## ✨ Features
 
-- 🔍 **Service Quality Monitoring**
-  - Real-time OpenAI system status
+- 🔍 **Real-time Monitoring**
+  - OpenAI system status tracking
   - Account type detection (Free/Plus)
   - Service degradation alerts
   - Visual status indicators
+  - One-click status details
 
-- 🌐 **IP Status**
-  - IP quality assessment (via Scamalytics)
-  - Cloudflare WARP detection
+- 🌐 **IP Intelligence**
+  - Risk level assessment (via Scamalytics)
+  - VPN/Proxy detection
+  - Cloudflare WARP status
   - IP history tracking (last 10)
-  - Risk level visualization
-  - One-click copy history
+  - One-click risk analysis
 
-- ⚡ **PoW Analysis**
-  - Real-time difficulty monitoring
-  - Visual difficulty indicators
+- ⚡ **Performance Metrics**
+  - PoW difficulty tracking
+  - Response time estimation
+  - Visual performance indicators
   - Risk level assessment
-  - Performance impact alerts
+  - Impact alerts
+
+All features work seamlessly without affecting ChatGPT's performance or requiring any configuration.
 
 ## 📦 Installation
 
