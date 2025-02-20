@@ -23,4 +23,4 @@ All notable changes to ChatGPT Degraded will be documented in this file.
 ### [0.2.0] - 2024-12-31
 - 🚀 Initial release with basic monitoring
 - 📸 Added screenshot and documentation
-- ✨ Implemented status monitoring display 
+- ✨ Implemented status monitoring display

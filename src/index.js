@@ -95,10 +95,14 @@
       const gradientStops = collapsedIndicator.querySelector("#gradient");
 
       // Adjust animation speed based on difficulty level
-      const animationSpeed = percentage / 25; // 0-4 scale
-      if (outerRingAnim) outerRingAnim.setAttribute("dur", `${4/animationSpeed}s`);
-      if (middleRingAnim) middleRingAnim.setAttribute("dur", `${2/animationSpeed}s`);
-      if (centerDotAnim) centerDotAnim.setAttribute("dur", `${1/animationSpeed}s`);
+      const animationSpeed = percentage < 25 ? 0.5 : percentage / 25; // Make it more still when easy
+      if (outerRingAnim) outerRingAnim.setAttribute("dur", `${8/animationSpeed}s`);
+      if (middleRingAnim) middleRingAnim.setAttribute("dur", `${4/animationSpeed}s`);
+      if (centerDotAnim) {
+        centerDotAnim.setAttribute("dur", `${2/animationSpeed}s`);
+        // Smaller pulse for easy difficulty
+        centerDotAnim.setAttribute("values", percentage < 25 ? "4;4.5;4" : "4;5;4");
+      }
 
       // Update color
       if (gradientStops) {
