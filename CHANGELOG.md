@@ -2,6 +2,11 @@
 
 All notable changes to ChatGPT Degraded will be documented in this file.
 
+### [0.2.7] - 2025-02-21
+- 🌐 Added Traditional Chinese (zh-TW) localization
+- 🌐 Enhanced Simplified Chinese (zh-CN) support
+- ✨ Auto-detect user language preference
+
 ### [0.2.6] - 2025-02-21
 - ✨ Dynamic icon animation based on PoW difficulty
 - 🎨 Visual alerts for high difficulty levels

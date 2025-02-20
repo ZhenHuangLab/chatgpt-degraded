@@ -27,9 +27,4 @@ Monitor ChatGPT service quality, IP status, and PoW difficulty in real-time. Lig
 
 ## 📋 Latest Changes
 
-### [0.2.5, 0.2.6] - 2025-02-20
-- ✨ IP history tracking (last 10)
-- 🎨 Enhanced tooltips and risk display
-- ✨ Dynamic icon animation based on PoW difficulty
-
 [Full Changelog](CHANGELOG.md) | [License](LICENSE) | Based on [chatgpt-degrade-checker](https://github.com/KoriIku/chatgpt-degrade-checker)

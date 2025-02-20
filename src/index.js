@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         ChatGPT Degraded
 // @name:zh-CN   ChatGPT 服务降级监控
+// @name:zh-TW   ChatGPT 服務降級監控
 // @namespace    https://github.com/lroolle/chatgpt-degraded
-// @version      0.2.6
+// @version      0.2.7
 // @description  Monitor ChatGPT service level, IP quality and PoW difficulty
 // @description:zh-CN  监控 ChatGPT 服务状态、IP 质量和 PoW 难度
+// @description:zh-TW  監控 ChatGPT 服務狀態、IP 質量和 PoW 難度
 // @author       lroolle
 // @license      AGPL-3.0
 // @match        *://chat.openai.com/*
@@ -25,6 +27,91 @@
   "use strict";
 
   let displayBox, collapsedIndicator;
+
+  const i18n = {
+    'en': {
+      service: 'Service',
+      ip: 'IP',
+      pow: 'PoW',
+      status: 'Status',
+      unknown: 'Unknown',
+      copyHistory: 'Click to copy history',
+      historyCopied: 'History copied!',
+      copyFailed: 'Copy failed',
+      riskLevels: {
+        veryEasy: 'Very Easy',
+        easy: 'Easy',
+        medium: 'Medium',
+        hard: 'Hard',
+        critical: 'Critical'
+      },
+      tooltips: {
+        powDifficulty: 'PoW Difficulty: Lower (green) means faster responses.',
+        ipHistory: 'IP History (recent 10):',
+        warpPlus: 'Protected by Cloudflare WARP+',
+        warp: 'Protected by Cloudflare WARP',
+        clickToCopy: 'Click to copy full history'
+      }
+    },
+    'zh-CN': {
+      service: '服务',
+      ip: 'IP',
+      pow: '算力',
+      status: '状态',
+      unknown: '未知',
+      copyHistory: '点击复制历史',
+      historyCopied: '已复制历史!',
+      copyFailed: '复制失败',
+      riskLevels: {
+        veryEasy: '非常容易',
+        easy: '容易',
+        medium: '中等',
+        hard: '困难',
+        critical: '严重'
+      },
+      tooltips: {
+        powDifficulty: 'PoW 难度：越低（绿色）响应越快',
+        ipHistory: 'IP 历史（最近10条）:',
+        warpPlus: '已启用 Cloudflare WARP+',
+        warp: '已启用 Cloudflare WARP',
+        clickToCopy: '点击复制完整历史'
+      }
+    },
+    'zh-TW': {
+      service: '服務',
+      ip: 'IP',
+      pow: '算力',
+      status: '狀態',
+      unknown: '未知',
+      copyHistory: '點擊複製歷史',
+      historyCopied: '已複製歷史!',
+      copyFailed: '複製失敗',
+      riskLevels: {
+        veryEasy: '非常容易',
+        easy: '容易',
+        medium: '中等',
+        hard: '困難',
+        critical: '嚴重'
+      },
+      tooltips: {
+        powDifficulty: 'PoW 難度：越低（綠色）回應越快',
+        ipHistory: 'IP 歷史（最近10筆）:',
+        warpPlus: '已啟用 Cloudflare WARP+',
+        warp: '已啟用 Cloudflare WARP',
+        clickToCopy: '點擊複製完整歷史'
+      }
+    }
+  };
+
+  // Get user language
+  const userLang = (navigator.language || 'en').toLowerCase();
+  const lang = i18n[userLang] ? userLang : 
+               userLang.startsWith('zh-tw') ? 'zh-TW' :
+               userLang.startsWith('zh') ? 'zh-CN' : 'en';
+  const t = key => {
+    const keys = key.split('.');
+    return keys.reduce((obj, k) => obj?.[k], i18n[lang]) || i18n.en[keys[keys.length-1]];
+  };
 
   function updateUserType(type) {
     const userTypeElement = document.getElementById("user-type");
@@ -198,7 +285,7 @@
       <div id="content">
         <div class="monitor-item">
           <div class="monitor-row">
-            <span class="label">ChatGPT</span>
+            <span class="label">${t('service')}</span>
             <span id="user-type" class="value" data-tooltip="ChatGPT Account Type"></span>
           </div>
         </div>
@@ -206,13 +293,13 @@
         <!-- Proof of Work Difficulty -->
         <div class="monitor-item">
           <div class="monitor-row">
-            <span class="label">PoW</span>
+            <span class="label">${t('pow')}</span>
             <div class="pow-container">
               <span id="difficulty" class="value monospace" data-tooltip="PoW Difficulty Value"></span>
               <span id="pow-level" class="value-tag" data-tooltip="Difficulty Level"></span>
             </div>
           </div>
-          <div class="progress-wrapper" data-tooltip="PoW Difficulty: Lower (green) means faster responses.">
+          <div class="progress-wrapper" data-tooltip="${t('tooltips.powDifficulty')}">
             <div class="progress-container">
               <div id="pow-bar" class="progress-bar"></div>
             </div>
@@ -223,7 +310,7 @@
         <!-- IP + IP Quality -->
         <div class="monitor-item">
           <div class="monitor-row">
-            <span class="label">IP</span>
+            <span class="label">${t('ip')}</span>
             <div class="ip-container">
               <span id="ip-address" class="value monospace" data-tooltip="Click to copy IP address"></span>
               <span id="warp-badge" class="warp-badge"></span>
@@ -235,13 +322,13 @@
         <!-- OpenAI System Status -->
         <div class="monitor-item">
           <div class="monitor-row">
-            <span class="label">Status</span>
+            <span class="label">${t('status')}</span>
             <a id="status-description"
                href="https://status.openai.com"
                target="_blank"
                class="value"
                data-tooltip="Click to open status.openai.com">
-               Checking status...
+               ${t('unknown')}
             </a>
           </div>
         </div>
@@ -674,10 +761,10 @@
   }
 
   function getLabelAndColorForScore(score) {
-    if (score < 25) return { label: "Low Risk", color: "#4CAF50" };
-    if (score < 50) return { label: "Medium Risk", color: "#859F3D" };
-    if (score < 75) return { label: "High Risk", color: "#FAB12F" };
-    return { label: "Very High Risk", color: "#e63946" };
+    if (score < 25) return { label: t('riskLevels.veryEasy'), color: "#4CAF50" };
+    if (score < 50) return { label: t('riskLevels.easy'), color: "#859F3D" };
+    if (score < 75) return { label: t('riskLevels.medium'), color: "#FAB12F" };
+    return { label: t('riskLevels.critical'), color: "#e63946" };
   }
 
   function getIPLogs() {
