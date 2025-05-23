@@ -3,7 +3,7 @@
 // @name:zh-CN   ChatGPT 服务降级监控
 // @name:zh-TW   ChatGPT 服務降級監控
 // @namespace    https://github.com/lroolle/chatgpt-degraded
-// @version      0.2.7
+// @version      0.2.8
 // @description  Monitor ChatGPT service level, IP quality and PoW difficulty
 // @description:zh-CN  监控 ChatGPT 服务状态、IP 质量和 PoW 难度
 // @description:zh-TW  監控 ChatGPT 服務狀態、IP 質量和 PoW 難度
@@ -29,88 +29,95 @@
   let displayBox, collapsedIndicator;
 
   const i18n = {
-    'en': {
-      service: 'Service',
-      ip: 'IP',
-      pow: 'PoW',
-      status: 'Status',
-      unknown: 'Unknown',
-      copyHistory: 'Click to copy history',
-      historyCopied: 'History copied!',
-      copyFailed: 'Copy failed',
+    en: {
+      service: "Service",
+      ip: "IP",
+      pow: "PoW",
+      status: "Status",
+      unknown: "Unknown",
+      copyHistory: "Click to copy history",
+      historyCopied: "History copied!",
+      copyFailed: "Copy failed",
       riskLevels: {
-        veryEasy: 'Very Easy',
-        easy: 'Easy',
-        medium: 'Medium',
-        hard: 'Hard',
-        critical: 'Critical'
+        veryEasy: "Very Easy",
+        easy: "Easy",
+        medium: "Medium",
+        hard: "Hard",
+        critical: "Critical",
       },
       tooltips: {
-        powDifficulty: 'PoW Difficulty: Lower (green) means faster responses.',
-        ipHistory: 'IP History (recent 10):',
-        warpPlus: 'Protected by Cloudflare WARP+',
-        warp: 'Protected by Cloudflare WARP',
-        clickToCopy: 'Click to copy full history'
-      }
+        powDifficulty: "PoW Difficulty: Lower (green) means faster responses.",
+        ipHistory: "IP History (recent 10):",
+        warpPlus: "Protected by Cloudflare WARP+",
+        warp: "Protected by Cloudflare WARP",
+        clickToCopy: "Click to copy full history",
+      },
     },
-    'zh-CN': {
-      service: '服务',
-      ip: 'IP',
-      pow: '算力',
-      status: '状态',
-      unknown: '未知',
-      copyHistory: '点击复制历史',
-      historyCopied: '已复制历史!',
-      copyFailed: '复制失败',
+    "zh-CN": {
+      service: "服务",
+      ip: "IP",
+      pow: "算力",
+      status: "状态",
+      unknown: "未知",
+      copyHistory: "点击复制历史",
+      historyCopied: "已复制历史!",
+      copyFailed: "复制失败",
       riskLevels: {
-        veryEasy: '非常容易',
-        easy: '容易',
-        medium: '中等',
-        hard: '困难',
-        critical: '严重'
+        veryEasy: "非常容易",
+        easy: "容易",
+        medium: "中等",
+        hard: "困难",
+        critical: "严重",
       },
       tooltips: {
-        powDifficulty: 'PoW 难度：越低（绿色）响应越快',
-        ipHistory: 'IP 历史（最近10条）:',
-        warpPlus: '已启用 Cloudflare WARP+',
-        warp: '已启用 Cloudflare WARP',
-        clickToCopy: '点击复制完整历史'
-      }
+        powDifficulty: "PoW 难度：越低（绿色）响应越快",
+        ipHistory: "IP 历史（最近10条）:",
+        warpPlus: "已启用 Cloudflare WARP+",
+        warp: "已启用 Cloudflare WARP",
+        clickToCopy: "点击复制完整历史",
+      },
     },
-    'zh-TW': {
-      service: '服務',
-      ip: 'IP',
-      pow: '算力',
-      status: '狀態',
-      unknown: '未知',
-      copyHistory: '點擊複製歷史',
-      historyCopied: '已複製歷史!',
-      copyFailed: '複製失敗',
+    "zh-TW": {
+      service: "服務",
+      ip: "IP",
+      pow: "算力",
+      status: "狀態",
+      unknown: "未知",
+      copyHistory: "點擊複製歷史",
+      historyCopied: "已複製歷史!",
+      copyFailed: "複製失敗",
       riskLevels: {
-        veryEasy: '非常容易',
-        easy: '容易',
-        medium: '中等',
-        hard: '困難',
-        critical: '嚴重'
+        veryEasy: "非常容易",
+        easy: "容易",
+        medium: "中等",
+        hard: "困難",
+        critical: "嚴重",
       },
       tooltips: {
-        powDifficulty: 'PoW 難度：越低（綠色）回應越快',
-        ipHistory: 'IP 歷史（最近10筆）:',
-        warpPlus: '已啟用 Cloudflare WARP+',
-        warp: '已啟用 Cloudflare WARP',
-        clickToCopy: '點擊複製完整歷史'
-      }
-    }
+        powDifficulty: "PoW 難度：越低（綠色）回應越快",
+        ipHistory: "IP 歷史（最近10筆）:",
+        warpPlus: "已啟用 Cloudflare WARP+",
+        warp: "已啟用 Cloudflare WARP",
+        clickToCopy: "點擊複製完整歷史",
+      },
+    },
   };
 
   // Get user language
-  const userLang = (navigator.language || 'en').toLowerCase();
-  const lang = i18n[userLang] ? userLang : 
-               userLang.startsWith('zh-tw') ? 'zh-TW' :
-               userLang.startsWith('zh') ? 'zh-CN' : 'en';
-  const t = key => {
-    const keys = key.split('.');
-    return keys.reduce((obj, k) => obj?.[k], i18n[lang]) || i18n.en[keys[keys.length-1]];
+  const userLang = (navigator.language || "en").toLowerCase();
+  const lang = i18n[userLang]
+    ? userLang
+    : userLang.startsWith("zh-tw")
+      ? "zh-TW"
+      : userLang.startsWith("zh")
+        ? "zh-CN"
+        : "en";
+  const t = (key) => {
+    const keys = key.split(".");
+    return (
+      keys.reduce((obj, k) => obj?.[k], i18n[lang]) ||
+      i18n.en[keys[keys.length - 1]]
+    );
   };
 
   function updateUserType(type) {
@@ -174,21 +181,29 @@
     difficultyElement.style.color = color;
     powLevel.style.color = color;
 
-    // Update icon animation based on difficulty
+    // Update icon animation based on difficulty level
     if (collapsedIndicator) {
-      const outerRingAnim = collapsedIndicator.querySelector("#outer-ring-anim");
-      const middleRingAnim = collapsedIndicator.querySelector("#middle-ring-anim");
-      const centerDotAnim = collapsedIndicator.querySelector("#center-dot-anim");
+      const outerRingAnim =
+        collapsedIndicator.querySelector("#outer-ring-anim");
+      const middleRingAnim =
+        collapsedIndicator.querySelector("#middle-ring-anim");
+      const centerDotAnim =
+        collapsedIndicator.querySelector("#center-dot-anim");
       const gradientStops = collapsedIndicator.querySelector("#gradient");
 
       // Adjust animation speed based on difficulty level
       const animationSpeed = percentage < 25 ? 0.5 : percentage / 25; // Make it more still when easy
-      if (outerRingAnim) outerRingAnim.setAttribute("dur", `${8/animationSpeed}s`);
-      if (middleRingAnim) middleRingAnim.setAttribute("dur", `${4/animationSpeed}s`);
+      if (outerRingAnim)
+        outerRingAnim.setAttribute("dur", `${8 / animationSpeed}s`);
+      if (middleRingAnim)
+        middleRingAnim.setAttribute("dur", `${4 / animationSpeed}s`);
       if (centerDotAnim) {
-        centerDotAnim.setAttribute("dur", `${2/animationSpeed}s`);
+        centerDotAnim.setAttribute("dur", `${2 / animationSpeed}s`);
         // Smaller pulse for easy difficulty
-        centerDotAnim.setAttribute("values", percentage < 25 ? "4;4.5;4" : "4;5;4");
+        centerDotAnim.setAttribute(
+          "values",
+          percentage < 25 ? "4;4.5;4" : "4;5;4",
+        );
       }
 
       // Update color
@@ -205,16 +220,25 @@
   unsafeWindow.fetch = async function (resource, options) {
     const response = await originalFetch(resource, options);
     const url = typeof resource === "string" ? resource : resource?.url;
+    // console.log("Fetch URL:", url);
+    // console.log("Fetch options:", options);
+
     const isChatRequirements =
       url &&
       (url.includes("/backend-api/sentinel/chat-requirements") ||
         url.includes("/backend-anon/sentinel/chat-requirements") ||
-        url.includes("/api/sentinel/chat-requirements")) &&
-      options?.method === "POST";
+        url.includes("/api/sentinel/chat-requirements"));
+
+    // const method = options?.method?.toUpperCase() || "GET";
+    // console.log("Method:", method, "isChatRequirements URL match:", isChatRequirements);
+
+    // Check if this is a chat requirements request (regardless of method for now)
     if (isChatRequirements) {
+      // console.log("Processing chat requirements request with method:", method);
       try {
         const clonedResponse = response.clone();
         const data = await clonedResponse.json();
+        // console.log("Chat requirements response data:", data);
         const difficulty = data?.proofofwork?.difficulty;
         const userType = data?.persona || data?.user_type || data?.account_type;
         const difficultyElement = document.getElementById("difficulty");
@@ -227,7 +251,9 @@
             if (ipElement) {
               const fullIP = ipElement.dataset.fullIp;
               const ipQualityElement = document.getElementById("ip-quality");
-              const score = ipQualityElement ? parseInt(ipQualityElement.dataset.score) : null;
+              const score = ipQualityElement
+                ? parseInt(ipQualityElement.dataset.score)
+                : null;
               if (fullIP) {
                 const logs = addIPLog(fullIP, score, difficulty);
                 const formattedLogs = formatIPLogs(logs);
@@ -235,8 +261,8 @@
                   "IP History (recent 10):",
                   formattedLogs,
                   "\n---",
-                  "Click to copy history"
-                ].join('\n');
+                  "Click to copy history",
+                ].join("\n");
                 ipElement.dataset.tooltip = ipContainerTooltip;
               }
             }
@@ -248,6 +274,7 @@
         updateUserType(userType || "free");
         updateProgressBars(difficulty || "N/A");
       } catch (error) {
+        console.error("Error processing chat requirements:", error);
         const difficultyElement = document.getElementById("difficulty");
         if (difficultyElement) {
           difficultyElement.innerText = "N/A";
@@ -264,7 +291,7 @@
     displayBox = document.createElement("div");
     displayBox.style.position = "fixed";
     displayBox.style.bottom = "10px";
-    displayBox.style.right = "80px";
+    displayBox.style.right = "55px";
     displayBox.style.width = "360px";
     displayBox.style.padding = "24px";
     displayBox.style.backgroundColor =
@@ -285,7 +312,7 @@
       <div id="content">
         <div class="monitor-item">
           <div class="monitor-row">
-            <span class="label">${t('service')}</span>
+            <span class="label">${t("service")}</span>
             <span id="user-type" class="value" data-tooltip="ChatGPT Account Type"></span>
           </div>
         </div>
@@ -293,13 +320,13 @@
         <!-- Proof of Work Difficulty -->
         <div class="monitor-item">
           <div class="monitor-row">
-            <span class="label">${t('pow')}</span>
+            <span class="label">${t("pow")}</span>
             <div class="pow-container">
               <span id="difficulty" class="value monospace" data-tooltip="PoW Difficulty Value"></span>
               <span id="pow-level" class="value-tag" data-tooltip="Difficulty Level"></span>
             </div>
           </div>
-          <div class="progress-wrapper" data-tooltip="${t('tooltips.powDifficulty')}">
+          <div class="progress-wrapper" data-tooltip="${t("tooltips.powDifficulty")}">
             <div class="progress-container">
               <div id="pow-bar" class="progress-bar"></div>
             </div>
@@ -310,7 +337,7 @@
         <!-- IP + IP Quality -->
         <div class="monitor-item">
           <div class="monitor-row">
-            <span class="label">${t('ip')}</span>
+            <span class="label">${t("ip")}</span>
             <div class="ip-container">
               <span id="ip-address" class="value monospace" data-tooltip="Click to copy IP address"></span>
               <span id="warp-badge" class="warp-badge"></span>
@@ -322,19 +349,25 @@
         <!-- OpenAI System Status -->
         <div class="monitor-item">
           <div class="monitor-row">
-            <span class="label">${t('status')}</span>
+            <span class="label">${t("status")}</span>
             <a id="status-description"
                href="https://status.openai.com"
                target="_blank"
                class="value"
                data-tooltip="Click to open status.openai.com">
-               ${t('unknown')}
+               ${t("unknown")}
             </a>
           </div>
         </div>
       </div>
 
       <style>
+        :root {
+          --warning-color: #FAB12F;
+          --warning-background: rgba(251, 177, 47, 0.1);
+          --error-color: #e63946;
+          --error-background: rgba(230, 57, 70, 0.1);
+        }
         .monitor-item {
           margin-bottom: 16px;
         }
@@ -441,6 +474,10 @@
           font-weight: 500;
           cursor: help;
           display: none;
+          transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .warp-badge:hover {
+          opacity: 0.8;
         }
         .ip-container .value-tag {
           padding-right: 0;
@@ -532,7 +569,7 @@
     collapsedIndicator = document.createElement("div");
     collapsedIndicator.style.position = "fixed";
     collapsedIndicator.style.bottom = "10px";
-    collapsedIndicator.style.right = "40px";
+    collapsedIndicator.style.right = "15px";
     collapsedIndicator.style.width = "24px";
     collapsedIndicator.style.height = "24px";
     collapsedIndicator.style.backgroundColor = "transparent";
@@ -666,6 +703,7 @@
           ontimeout: () => reject(new Error("Request timed out")),
         });
       });
+      console.log("fetchIPQuality.response", response);
       const parser = new DOMParser();
       const doc = parser.parseFromString(response, "text/html");
       const scoreElement = doc.querySelector(".score_bar .score");
@@ -676,7 +714,7 @@
           label: "Unknown",
           color: "#aaa",
           tooltip: "Could not determine IP quality",
-          score: null
+          score: null,
         };
       }
       const score = parseInt(scoreMatch[1], 10);
@@ -748,7 +786,7 @@
         label: "Unknown",
         color: "#aaa",
         tooltip: "Could not check IP quality",
-        score: null
+        score: null,
       };
     }
   }
@@ -761,18 +799,19 @@
   }
 
   function getLabelAndColorForScore(score) {
-    if (score < 25) return { label: t('riskLevels.veryEasy'), color: "#4CAF50" };
-    if (score < 50) return { label: t('riskLevels.easy'), color: "#859F3D" };
-    if (score < 75) return { label: t('riskLevels.medium'), color: "#FAB12F" };
-    return { label: t('riskLevels.critical'), color: "#e63946" };
+    if (score < 25)
+      return { label: t("riskLevels.veryEasy"), color: "#4CAF50" };
+    if (score < 50) return { label: t("riskLevels.easy"), color: "#859F3D" };
+    if (score < 75) return { label: t("riskLevels.medium"), color: "#FAB12F" };
+    return { label: t("riskLevels.critical"), color: "#e63946" };
   }
 
   function getIPLogs() {
     try {
-      const logs = localStorage.getItem('chatgpt_ip_logs');
+      const logs = localStorage.getItem("chatgpt_ip_logs");
       return logs ? JSON.parse(logs) : [];
     } catch (error) {
-      console.error('Error reading IP logs:', error);
+      console.error("Error reading IP logs:", error);
       return [];
     }
   }
@@ -788,78 +827,206 @@
         logs.unshift(newLog);
       }
       const trimmedLogs = logs.slice(0, 10);
-      localStorage.setItem('chatgpt_ip_logs', JSON.stringify(trimmedLogs));
+      localStorage.setItem("chatgpt_ip_logs", JSON.stringify(trimmedLogs));
       return trimmedLogs;
     } catch (error) {
-      console.error('Error adding IP log:', error);
+      console.error("Error adding IP log:", error);
       return [];
     }
   }
 
   function formatIPLogs(logs) {
-    return logs.map(log => {
-      const date = new Date(log.timestamp);
-      const formattedDate = date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+)/, '[$3-$1-$2 $4:$5]');
-      const { color: powColor, level: powLevel } = getRiskColorAndLevel(log.difficulty);
-      const scoreDisplay = log.score !== null && log.score !== undefined ? log.score : 'N/A';
-      return `${formattedDate} ${log.ip}(${scoreDisplay}), ${log.difficulty || 'N/A'}(${powLevel})`;
-    }).join('\n');
+    return logs
+      .map((log) => {
+        const date = new Date(log.timestamp);
+        const formattedDate = date
+          .toLocaleString("en-US", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })
+          .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+)/, "[$3-$1-$2 $4:$5]");
+        const { color: powColor, level: powLevel } = getRiskColorAndLevel(
+          log.difficulty,
+        );
+        const scoreDisplay =
+          log.score !== null && log.score !== undefined ? log.score : "N/A";
+        return `${formattedDate} ${log.ip}(${scoreDisplay}), ${log.difficulty || "N/A"}(${powLevel})`;
+      })
+      .join("\n");
   }
 
   async function fetchIPInfo() {
-    try {
-      const response = await fetch("https://chatgpt.com/cdn-cgi/trace");
-      const text = await response.text();
-      const data = text.split("\n").reduce((obj, line) => {
-        const [key, value] = line.split("=");
-        if (key && value) obj[key.trim()] = value.trim();
-        return obj;
-      }, {});
-      const ipElement = document.getElementById("ip-address");
-      const warpBadge = document.getElementById("warp-badge");
-      const ipQualityElement = document.getElementById("ip-quality");
-      if (!ipElement || !warpBadge || !ipQualityElement) return;
+    const fallbackServices = [
+      {
+        url: "https://chatgpt.com/cdn-cgi/trace",
+        parser: (text) => {
+          const data = text.split("\n").reduce((obj, line) => {
+            const [key, value] = line.split("=");
+            if (key && value) obj[key.trim()] = value.trim();
+            return obj;
+          }, {});
+          return {
+            ip: data.ip,
+            warp: data.warp || "off",
+            location: data.loc,
+            colo: data.colo,
+          };
+        },
+      },
+      {
+        url: "https://www.cloudflare.com/cdn-cgi/trace",
+        parser: (text) => {
+          const data = text.split("\n").reduce((obj, line) => {
+            const [key, value] = line.split("=");
+            if (key && value) obj[key.trim()] = value.trim();
+            return obj;
+          }, {});
+          return {
+            ip: data.ip,
+            warp: data.warp || "off",
+            location: data.loc,
+            colo: data.colo,
+          };
+        },
+      },
+      {
+        url: "https://ipinfo.io/json",
+        parser: (text) => {
+          const data = JSON.parse(text);
+          return {
+            ip: data.ip,
+            warp: "off", // ipinfo.io doesn't provide WARP status
+            location: data.loc,
+            city: data.city,
+            country: data.country,
+          };
+        },
+      },
+    ];
 
-      const maskedIP = maskIP(data.ip);
-      const fullIP = data.ip || "Unknown";
-      const warpStatus = data.warp || "off";
-      ipElement.innerText = maskedIP;
-      ipElement.dataset.fullIp = fullIP;
+    let lastError = null;
 
-      if (warpStatus === "on" || warpStatus === "plus") {
-        warpBadge.style.display = "inline-flex";
-        warpBadge.innerText = warpStatus === "plus" ? "warp+" : "warp";
-        warpBadge.dataset.tooltip = `Protected by Cloudflare WARP${warpStatus === "plus" ? "+" : ""}`;
-      } else {
-        warpBadge.style.display = "none";
+    for (let i = 0; i < fallbackServices.length; i++) {
+      const service = fallbackServices[i];
+      try {
+        console.log(
+          `Attempting to fetch IP info from service ${i + 1}:`,
+          service.url,
+        );
+
+        const response = await new Promise((resolve, reject) => {
+          GM_xmlhttpRequest({
+            method: "GET",
+            url: service.url,
+            timeout: 5000,
+            onload: (r) => {
+              if (r.status === 200) {
+                resolve(r.responseText);
+              } else {
+                reject(new Error(`HTTP ${r.status}: ${r.statusText}`));
+              }
+            },
+            onerror: (err) =>
+              reject(
+                new Error(`Network error: ${err.message || "Unknown error"}`),
+              ),
+            ontimeout: () => reject(new Error("Request timed out")),
+          });
+        });
+
+        console.log(`Service ${i + 1} response:`, response);
+        const data = service.parser(response);
+        console.log(`Parsed data from service ${i + 1}:`, data);
+
+        if (!data.ip) {
+          throw new Error("No IP address found in response");
+        }
+
+        await updateIPDisplay(data);
+        return; // Success, exit function
+      } catch (error) {
+        console.error(`Service ${i + 1} failed:`, error.message);
+        lastError = error;
+
+        // If not the last service, wait a bit before trying next
+        if (i < fallbackServices.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
       }
+    }
 
+    // All services failed
+    console.error("All IP services failed. Last error:", lastError);
+    await handleIPFetchFailure(lastError);
+  }
+
+  async function updateIPDisplay(data) {
+    const ipElement = document.getElementById("ip-address");
+    const warpBadge = document.getElementById("warp-badge");
+    const ipQualityElement = document.getElementById("ip-quality");
+
+    if (!ipElement || !warpBadge || !ipQualityElement) {
+      throw new Error("IP display elements not found");
+    }
+
+    const maskedIP = maskIP(data.ip);
+    const fullIP = data.ip;
+    const warpStatus = data.warp || "off";
+
+    ipElement.innerText = maskedIP;
+    ipElement.dataset.fullIp = fullIP;
+
+    // Handle WARP display and warnings
+    if (warpStatus === "on" || warpStatus === "plus") {
+      warpBadge.style.display = "inline-flex";
+      warpBadge.innerText = warpStatus === "plus" ? "warp+" : "warp";
+      warpBadge.dataset.tooltip = t(
+        `tooltips.${warpStatus === "plus" ? "warpPlus" : "warp"}`,
+      );
+      warpBadge.style.backgroundColor =
+        "var(--success-color, rgba(16, 163, 127, 0.1))";
+      warpBadge.style.color = "var(--success-color, #10a37f)";
+    } else {
+      // Show warning when WARP is not enabled
+      warpBadge.style.display = "inline-flex";
+      warpBadge.innerText = "no warp";
+      warpBadge.dataset.tooltip =
+        "⚠️ WARP not enabled - Consider enabling Cloudflare WARP for better privacy and potentially improved IP quality";
+      warpBadge.style.backgroundColor =
+        "var(--warning-background, rgba(251, 177, 47, 0.1))";
+      warpBadge.style.color = "var(--warning-color, #FAB12F)";
+    }
+
+    // Fetch IP quality
+    try {
       const { label, color, tooltip, score } = await fetchIPQuality(fullIP);
+      // console.log("IP Quality result:", { label, color, tooltip, score });
+
       ipElement.style.color = color;
-      ipQualityElement.innerText = score !== null ? `${label} (${score})` : label;
+      ipQualityElement.innerText =
+        score !== null ? `${label} (${score})` : label;
       ipQualityElement.style.color = color;
       ipQualityElement.dataset.score = score;
+      ipQualityElement.dataset.tooltip = tooltip;
 
+      // Update IP logs
       const difficultyElement = document.getElementById("difficulty");
       const currentDifficulty = difficultyElement?.innerText || "N/A";
       const logs = addIPLog(fullIP, score, currentDifficulty);
       const formattedLogs = formatIPLogs(logs);
       const ipContainerTooltip = [
-        "IP History (recent 10):",
+        t("tooltips.ipHistory"),
         formattedLogs,
         "\n---",
-        "Click to copy full history"
-      ].join('\n');
+        t("tooltips.clickToCopy"),
+      ].join("\n");
       ipElement.dataset.tooltip = ipContainerTooltip;
-      ipQualityElement.dataset.tooltip = tooltip;
 
+      // Add click handlers
       ipQualityElement.onclick = () =>
         window.open(`https://scamalytics.com/ip/${fullIP}`, "_blank");
 
@@ -869,30 +1036,58 @@
           const formattedHistory = formatIPLogs(logs);
           await navigator.clipboard.writeText(formattedHistory);
           const originalText = ipElement.innerText;
-          ipElement.innerText = "History copied!";
+          ipElement.innerText = t("historyCopied");
           setTimeout(() => {
             ipElement.innerText = originalText;
           }, 1000);
         } catch (err) {
-          ipElement.innerText = "Copy failed";
+          console.error("Copy failed:", err);
+          const originalText = ipElement.innerText;
+          ipElement.innerText = t("copyFailed");
           setTimeout(() => {
-            ipElement.innerText = maskedIP;
+            ipElement.innerText = originalText;
           }, 1000);
         }
       };
+
       ipElement.removeEventListener("click", copyHandler);
       ipElement.addEventListener("click", copyHandler);
-    } catch (error) {
-      const ipElement = document.getElementById("ip-address");
-      const warpBadge = document.getElementById("warp-badge");
-      const ipQualityElement = document.getElementById("ip-quality");
-      if (ipElement) ipElement.innerText = "Failed to fetch";
-      if (warpBadge) warpBadge.style.display = "none";
-      if (ipQualityElement) {
-        ipQualityElement.innerText = "Unknown";
-        ipQualityElement.style.color = "#aaa";
-        ipQualityElement.dataset.tooltip = "Could not check IP quality";
-      }
+    } catch (qualityError) {
+      console.error("Failed to fetch IP quality:", qualityError);
+      ipQualityElement.innerText = "Quality check failed";
+      ipQualityElement.style.color = "#aaa";
+      ipQualityElement.dataset.tooltip = `Could not check IP quality: ${qualityError.message}`;
+    }
+  }
+
+  async function handleIPFetchFailure(error) {
+    console.error("All IP fetch attempts failed:", error);
+
+    const ipElement = document.getElementById("ip-address");
+    const warpBadge = document.getElementById("warp-badge");
+    const ipQualityElement = document.getElementById("ip-quality");
+
+    if (ipElement) {
+      ipElement.innerText = "Failed to fetch";
+      ipElement.style.color = "#e63946";
+      ipElement.dataset.tooltip = `IP fetch failed: ${error?.message || "Unknown error"}\nTry refreshing the page`;
+    }
+
+    if (warpBadge) {
+      warpBadge.style.display = "inline-flex";
+      warpBadge.innerText = "error";
+      warpBadge.dataset.tooltip =
+        "Could not determine WARP status due to network error";
+      warpBadge.style.backgroundColor =
+        "var(--error-background, rgba(230, 57, 70, 0.1))";
+      warpBadge.style.color = "var(--error-color, #e63946)";
+    }
+
+    if (ipQualityElement) {
+      ipQualityElement.innerText = "Network Error";
+      ipQualityElement.style.color = "#e63946";
+      ipQualityElement.dataset.tooltip =
+        "Could not check IP quality due to network error";
     }
   }
 

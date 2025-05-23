@@ -4,3 +4,7 @@ globs:
 ---
 
 [best-practice] ChatGPT's official domain changed to chatgpt.com from chat.openai.com in 2024
+[error-fix] UserScript fetch() fails due to CORS - use GM_xmlhttpRequest for cross-origin requests
+[best-practice] Implement fallback services for IP detection to improve reliability 
+[design] Add WARP warning badge when Cloudflare WARP is disabled for better UX
+[optimization] Add retry logic with 1s delay between service attempts for resilience
