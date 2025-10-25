@@ -162,6 +162,13 @@
     bar.dataset.tooltip = title;
     label.innerText = text;
   }
+    // 将十六进制字符串转成十进制并返回括号形式，如 "07a120" -> " (500000)"
+  function fmtHexAsDecimal(hex) {
+    if (!hex || hex === "N/A") return "";
+    const cleaned = String(hex).trim().replace(/^0x/i, "").replace(/^0+/, "") || "0";
+    const n = parseInt(cleaned, 16); // 以 16 进制解析
+    return Number.isNaN(n) ? "" : ` (${n})`;
+  }
 
   function updateProgressBars(difficulty) {
     const powBar = document.getElementById("pow-bar");
@@ -244,7 +251,7 @@
         const difficultyElement = document.getElementById("difficulty");
         if (difficultyElement) {
           if (difficulty) {
-            difficultyElement.innerText = difficulty;
+            difficultyElement.innerText = difficulty + fmtHexAsDecimal(difficulty);
             difficultyElement.dataset.tooltip = `Raw Difficulty Value: ${difficulty}`;
             // Update IP log with new PoW difficulty
             const ipElement = document.getElementById("ip-address");
