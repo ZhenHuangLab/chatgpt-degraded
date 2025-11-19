@@ -15,7 +15,7 @@ Monitor ChatGPT service quality, subscription, IP status, and PoW difficulty in 
 ## 📦 Quick Start
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) (or [Violentmonkey](https://violentmonkey.github.io/)/[Greasemonkey](https://www.greasespot.net/))
-2. Install script: [Greasy Fork](https://greasyfork.org/en/scripts/522323-chatgpt-degraded) or [GitHub](https://github.com/lroolle/chatgpt-degraded/raw/main/src/index.js)
+2. Install script: [Greasy Fork](https://greasyfork.org/en/scripts/556249-chatgpt-monitor) or [GitHub](https://github.com/ZhenHuangLab/chatgpt-monitor/blob/main/src/index.js)
 3. Visit [ChatGPT](https://chatgpt.com) - look for indicator dot in bottom-right
 
 ## 🔒 Privacy
