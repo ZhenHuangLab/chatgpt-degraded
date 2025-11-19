@@ -1,6 +1,6 @@
-# ChatGPT Degraded
+# ChatGPT Monitor
 
-Monitor ChatGPT service quality, IP status, and PoW difficulty in real-time. Lightweight userscript that helps track performance, IP quality, and Proof of Work challenges.
+Monitor ChatGPT service quality, subscription, IP status, and PoW difficulty in real-time. Lightweight userscript that helps track performance, subscription, IP quality, and Proof of Work challenges.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/lroolle/chatgpt-degraded/main/assets/screenshot.png" width="360" alt="Screenshot">
@@ -27,4 +27,4 @@ Monitor ChatGPT service quality, IP status, and PoW difficulty in real-time. Lig
 
 ## 📋 Latest Changes
 
-[Full Changelog](CHANGELOG.md) | [License](LICENSE) | Based on [chatgpt-degrade-checker](https://github.com/KoriIku/chatgpt-degrade-checker)
+[Full Changelog](CHANGELOG.md) | [License](LICENSE) | Based on [chatgpt-degraded](https://github.com/lroolle/chatgpt-degraded)
