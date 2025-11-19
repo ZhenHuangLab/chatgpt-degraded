@@ -1,13 +1,14 @@
 // ==UserScript==
-// @name         ChatGPT Degraded
-// @name:zh-CN   ChatGPT 服务降级监控
-// @name:zh-TW   ChatGPT 服務降級監控
-// @namespace    https://github.com/lroolle/chatgpt-degraded
-// @version      0.2.8
-// @description  Monitor ChatGPT service level, IP quality and PoW difficulty
-// @description:zh-CN  监控 ChatGPT 服务状态、IP 质量和 PoW 难度
-// @description:zh-TW  監控 ChatGPT 服務狀態、IP 質量和 PoW 難度
+// @name         ChatGPT Monitor
+// @name:zh-CN   ChatGPT 服务监控
+// @name:zh-TW   ChatGPT 服務監控
+// @namespace    https://github.com/ZhenHuangLab/chatgpt-monitor
+// @version      0.3
+// @description  Monitor ChatGPT service level, subscription, IP quality and PoW difficulty
+// @description:zh-CN  监控 ChatGPT 服务状态、订阅、IP 质量和 PoW 难度
+// @description:zh-TW  監控 ChatGPT 服務狀態、订阅、IP 質量和 PoW 難度
 // @author       lroolle
+// @author       Zhen Huang (fork)
 // @license      AGPL-3.0
 // @match        *://chat.openai.com/*
 // @match        *://chatgpt.com/*
@@ -17,16 +18,20 @@
 // @grant        unsafeWindow
 // @run-at       document-start
 // @icon         data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmE5ZDhmO3N0b3Atb3BhY2l0eToxIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzJhOWQ4ZjtzdG9wLW9wYWNpdHk6MC44Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8Zz4KICAgIDxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjI4IiBmaWxsPSJ1cmwoI2dyYWRpZW50KSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiLz4KPCEtLU91dGVyIGNpcmNsZSBtb2RpZmllZCB0byBsb29rIGxpa2UgIkMiLS0+CiAgICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjEyNSA1NSIgc3Ryb2tlLWRhc2hvZmZzZXQ9IjIwIi8+CiAgICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjQiIGZpbGw9IiNmZmYiLz4KICA8L2c+Cjwvc3ZnPg==
-// @homepageURL  https://github.com/lroolle/chatgpt-degraded
-// @supportURL   https://github.com/lroolle/chatgpt-degraded/issues
-// @downloadURL  https://update.greasyfork.org/scripts/522323/ChatGPT%20Degraded.user.js
-// @updateURL    https://update.greasyfork.org/scripts/522323/ChatGPT%20Degraded.meta.js
+// @homepageURL  https://github.com/ZhenHuangLab/chatgpt-monitor
+// @supportURL   https://github.com/ZhenHuangLab/chatgpt-monitor/issues
+// @downloadURL https://update.greasyfork.org/scripts/556249/ChatGPT%20Monitor.user.js
+// @updateURL https://update.greasyfork.org/scripts/556249/ChatGPT%20Monitor.meta.js
+// Forked from https://github.com/lroolle/chatgpt-degraded
 // ==/UserScript==
 
 (function () {
   "use strict";
 
   let displayBox, collapsedIndicator;
+  let subscriptionExpireAt = null;
+  let subscriptionTimer = null;
+
 
   const i18n = {
     en: {
@@ -38,6 +43,8 @@
       copyHistory: "Click to copy history",
       historyCopied: "History copied!",
       copyFailed: "Copy failed",
+      subscription: "Subscription",
+      remaining: "Remaining",
       riskLevels: {
         veryEasy: "Very Easy",
         easy: "Easy",
@@ -62,6 +69,8 @@
       copyHistory: "点击复制历史",
       historyCopied: "已复制历史!",
       copyFailed: "复制失败",
+      subscription: "订阅",
+      remaining: "剩余",
       riskLevels: {
         veryEasy: "非常容易",
         easy: "容易",
@@ -86,6 +95,8 @@
       copyHistory: "點擊複製歷史",
       historyCopied: "已複製歷史!",
       copyFailed: "複製失敗",
+      subscription: "訂閱",
+      remaining: "剩餘",
       riskLevels: {
         veryEasy: "非常容易",
         easy: "容易",
@@ -119,6 +130,128 @@
       i18n.en[keys[keys.length - 1]]
     );
   };
+  function formatRemainingTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  function updateSubscriptionCountdown() {
+    if (!subscriptionExpireAt) return;
+    const remainingEl = document.getElementById("sub-remaining");
+    if (!remainingEl) return;
+
+    const diff = subscriptionExpireAt - Date.now();
+    if (diff <= 0) {
+      remainingEl.textContent = lang.startsWith("zh") ? "已过期" : "Expired";
+      remainingEl.style.color = "var(--error-color, #e63946)";
+      clearInterval(subscriptionTimer);
+      subscriptionTimer = null;
+      return;
+    }
+
+    remainingEl.textContent = formatRemainingTime(diff);
+
+    const days = diff / (24 * 60 * 60 * 1000);
+    let color;
+    if (days > 7) {
+      // > 7d：绿色
+      color = "var(--success-color, #10a37f)";
+    } else if (days > 3) {
+      // 3d < t <= 7d：橙色
+      color = "var(--warning-color, #FAB12F)";
+    } else {
+      // <= 3d：红色
+      color = "var(--error-color, #e63946)";
+    }
+    remainingEl.style.color = color;
+  }
+
+
+  function applySubscriptionToUI() {
+    if (!subscriptionExpireAt) return;
+
+    const expireEl = document.getElementById("sub-expire");
+    const remainingEl = document.getElementById("sub-remaining");
+    if (!remainingEl) return;
+
+    const date = new Date(subscriptionExpireAt);
+
+    const tooltipText =
+      (lang.startsWith("zh")
+        ? "订阅到期时间："
+        : "Subscription expires at: ") + date.toString();
+
+    if (expireEl) {
+      expireEl.textContent = "";
+      expireEl.dataset.tooltip = tooltipText;
+    }
+
+    remainingEl.dataset.tooltip = tooltipText;
+
+    if (subscriptionTimer) clearInterval(subscriptionTimer);
+    updateSubscriptionCountdown();
+    subscriptionTimer = setInterval(updateSubscriptionCountdown, 1000);
+  }
+
+
+  function findEntitlement(data) {
+    if (!data || typeof data !== "object") return null;
+
+    if (data.entitlement) return data.entitlement;
+
+    // 当前 ChatGPT Web 的典型结构：accounts.default.entitlement
+    if (data.accounts?.default?.entitlement) {
+      return data.accounts.default.entitlement;
+    }
+
+    // 保险起见：遍历 accounts 里的所有 key，找第一个有 entitlement 的
+    if (data.accounts && typeof data.accounts === "object") {
+      for (const key of Object.keys(data.accounts)) {
+        const maybe = data.accounts[key]?.entitlement;
+        if (maybe) return maybe;
+      }
+    }
+
+    return null;
+  }
+
+  function handleAccountsCheck(data) {
+    try {
+      const entitlement = findEntitlement(data);
+      if (!entitlement) {
+        console.debug("[ChatGPT Degraded] no entitlement in accounts/check:", data);
+        return;
+      }
+
+      // 你之前截图里的 expires_at 在 discount 里面
+      const expiresAtStr =
+        entitlement.discount?.expires_at ||
+        entitlement.expires_at ||
+        entitlement.renews_at ||
+        entitlement.cancels_at;
+
+      if (!expiresAtStr) {
+        console.debug("[ChatGPT Degraded] no expires_at in entitlement:", entitlement);
+        return;
+      }
+
+      const ts = Date.parse(expiresAtStr);
+      if (Number.isNaN(ts)) {
+        console.warn("[ChatGPT Degraded] cannot parse expires_at:", expiresAtStr);
+        return;
+      }
+
+      subscriptionExpireAt = ts;
+      applySubscriptionToUI();
+    } catch (e) {
+      console.error("Error handling accounts/check:", e);
+    }
+  }
+
 
   function updateUserType(type) {
     const userTypeElement = document.getElementById("user-type");
@@ -162,8 +295,7 @@
     bar.dataset.tooltip = title;
     label.innerText = text;
   }
-    // 将十六进制字符串转成十进制并返回括号形式，如 "07a120" -> " (500000)"
-  function fmtHexAsDecimal(hex) {
+   function fmtHexAsDecimal(hex) {
     if (!hex || hex === "N/A") return "";
     const cleaned = String(hex).trim().replace(/^0x/i, "").replace(/^0+/, "") || "0";
     const n = parseInt(cleaned, 16); // 以 16 进制解析
@@ -235,6 +367,8 @@
       (url.includes("/backend-api/sentinel/chat-requirements") ||
         url.includes("/backend-anon/sentinel/chat-requirements") ||
         url.includes("/api/sentinel/chat-requirements"));
+    const isAccountsCheck =
+      url && url.includes("/backend-api/accounts/check");
 
     // const method = options?.method?.toUpperCase() || "GET";
     // console.log("Method:", method, "isChatRequirements URL match:", isChatRequirements);
@@ -291,6 +425,15 @@
         updateProgressBars("N/A");
       }
     }
+    if (isAccountsCheck) {
+      try {
+        const clonedResponse = response.clone();
+        const data = await clonedResponse.json();
+        handleAccountsCheck(data);
+      } catch (error) {
+        console.error("Error processing accounts/check:", error);
+      }
+    }
     return response;
   };
 
@@ -323,7 +466,16 @@
             <span id="user-type" class="value" data-tooltip="ChatGPT Account Type"></span>
           </div>
         </div>
-
+        <!-- Subscription Expire / Remaining -->
+        <div class="monitor-item">
+          <div class="monitor-row">
+            <span class="label">${t("subscription")}</span>
+            <div class="pow-container">
+              <span id="sub-expire" class="value monospace" data-tooltip=""></span>
+              <span id="sub-remaining" class="value-tag" data-tooltip="${t("remaining")}"></span>
+            </div>
+          </div>
+        </div>
         <!-- Proof of Work Difficulty -->
         <div class="monitor-item">
           <div class="monitor-row">
@@ -569,6 +721,10 @@
             max-width: calc(100vw - 48px);
           }
         }
+        #sub-expire {
+          display: none;
+        }
+
       </style>
     `;
     document.body.appendChild(displayBox);
@@ -659,6 +815,7 @@
     fetchIPInfo();
     fetchChatGPTStatus();
     updateTheme();
+    applySubscriptionToUI();
     const statusCheckInterval = 60 * 60 * 1000;
     let statusCheckTimer = setInterval(fetchChatGPTStatus, statusCheckInterval);
 
