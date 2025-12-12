@@ -3,12 +3,12 @@
 // @name:zh-CN   ChatGPT 服务监控
 // @name:zh-TW   ChatGPT 服務監控
 // @namespace    https://github.com/ZhenHuangLab/chatgpt-monitor
-// @version      0.3
+// @version      0.3.1
 // @description  Monitor ChatGPT service level, subscription, IP quality and PoW difficulty
 // @description:zh-CN  监控 ChatGPT 服务状态、订阅、IP 质量和 PoW 难度
 // @description:zh-TW  監控 ChatGPT 服務狀態、订阅、IP 質量和 PoW 難度
-// @author       lroolle
-// @author       Zhen Huang (fork)
+// @author       Zhen Huang
+// @author       lroolle (original)
 // @license      AGPL-3.0
 // @match        *://chat.openai.com/*
 // @match        *://chatgpt.com/*
@@ -17,12 +17,12 @@
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @run-at       document-start
-// @icon         data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmE5ZDhmO3N0b3Atb3BhY2l0eToxIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzJhOWQ4ZjtzdG9wLW9wYWNpdHk6MC44Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8Zz4KICAgIDxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjI4IiBmaWxsPSJ1cmwoI2dyYWRpZW50KSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiLz4KPCEtLU91dGVyIGNpcmNsZSBtb2RpZmllZCB0byBsb29rIGxpa2UgIkMiLS0+CiAgICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjEyNSA1NSIgc3Ryb2tlLWRhc2hvZmZzZXQ9IjIwIi8+CiAgICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjQiIGZpbGw9IiNmZmYiLz4KICA8L2c+Cjwvc3ZnPg==
+// @icon         data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmE5ZDhmO3N0b3Atb3BhY2l0eToxIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzJhOWQ4ZjtzdG9wLW9wYWNuYXRpdHk6MC44Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8Zz4KICAgIDxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjI4IiBmaWxsPSJ1cmwoI2dyYWRpZW50KSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiLz4KPCEtLU91dGVyIGNpcmNsZSBtb2RpZmllZCB0byBsb29rIGxpa2UgIkMiLS0+CiAgICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjEyNSA1NSIgc3Ryb2tlLWRhc2hvZmZzZXQ9IjIwIi8+CiAgICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjQiIGZpbGw9IiNmZmYiLz4KICA8L2c+Cjwvc3ZnPg==
 // @homepageURL  https://github.com/ZhenHuangLab/chatgpt-monitor
 // @supportURL   https://github.com/ZhenHuangLab/chatgpt-monitor/issues
+// Forked from https://github.com/lroolle/chatgpt-degraded
 // @downloadURL https://update.greasyfork.org/scripts/556249/ChatGPT%20Monitor.user.js
 // @updateURL https://update.greasyfork.org/scripts/556249/ChatGPT%20Monitor.meta.js
-// Forked from https://github.com/lroolle/chatgpt-degraded
 // ==/UserScript==
 
 (function () {
@@ -31,6 +31,9 @@
   let displayBox, collapsedIndicator;
   let subscriptionExpireAt = null;
   let subscriptionTimer = null;
+
+  // ✅ Keep last known PoW so later finalize/no-pow responses won't overwrite UI
+  let lastPowDifficulty = null;
 
 
   const i18n = {
@@ -356,37 +359,72 @@
   }
 
   const originalFetch = unsafeWindow.fetch;
+
+  function getFetchUrl(resource) {
+    if (typeof resource === "string") return resource;
+    if (resource instanceof URL) return resource.href;
+    return resource?.url || "";
+  }
+
+  // ✅ Match ONLY:
+  // - .../sentinel/chat-requirements
+  // - .../sentinel/chat-requirements/
+  // - .../sentinel/chat-requirements/prepare
+  // - .../sentinel/chat-requirements/prepare/
+  // and allow ?/# after them
+  // ❌ Do NOT match: .../sentinel/chat-requirements/finalize
+  const CHAT_REQUIREMENTS_RE =
+    /(?:^|\/)(?:backend-api|backend-anon|api)\/sentinel\/chat-requirements(?:\/prepare)?(?:\/?$|[?#])/i;
+
+  function isChatRequirementsUrl(url) {
+    return CHAT_REQUIREMENTS_RE.test(String(url || ""));
+  }
+
+  function extractChatRequirementsFields(data) {
+    // 有些版本会把内容包在 chat_requirements / requirements 里
+    const root = data?.chat_requirements || data?.requirements || data;
+
+    // PoW 字段命名可能变化：proofofwork / proof_of_work / pow
+    const pow = root?.proofofwork || root?.proof_of_work || root?.pow;
+
+    const difficulty = pow?.difficulty ?? null;
+    const userType =
+      root?.persona || root?.user_type || root?.account_type || null;
+
+    return { difficulty, userType };
+  }
+
   unsafeWindow.fetch = async function (resource, options) {
     const response = await originalFetch(resource, options);
-    const url = typeof resource === "string" ? resource : resource?.url;
+    const url = getFetchUrl(resource);
     // console.log("Fetch URL:", url);
     // console.log("Fetch options:", options);
 
-    const isChatRequirements =
-      url &&
-      (url.includes("/backend-api/sentinel/chat-requirements") ||
-        url.includes("/backend-anon/sentinel/chat-requirements") ||
-        url.includes("/api/sentinel/chat-requirements"));
+    const isChatRequirements = !!url && isChatRequirementsUrl(url);
     const isAccountsCheck =
       url && url.includes("/backend-api/accounts/check");
 
-    // const method = options?.method?.toUpperCase() || "GET";
-    // console.log("Method:", method, "isChatRequirements URL match:", isChatRequirements);
-
     // Check if this is a chat requirements request (regardless of method for now)
     if (isChatRequirements) {
-      // console.log("Processing chat requirements request with method:", method);
       try {
         const clonedResponse = response.clone();
-        const data = await clonedResponse.json();
-        // console.log("Chat requirements response data:", data);
-        const difficulty = data?.proofofwork?.difficulty;
-        const userType = data?.persona || data?.user_type || data?.account_type;
+        const ct = (clonedResponse.headers.get("content-type") || "").toLowerCase();
+        const data = ct.includes("application/json")
+          ? await clonedResponse.json()
+          : JSON.parse(await clonedResponse.text());
+
+        const { difficulty, userType } = extractChatRequirementsFields(data);
         const difficultyElement = document.getElementById("difficulty");
+
+        // ✅ Only update UI when we have difficulty, otherwise keep last known
         if (difficultyElement) {
           if (difficulty) {
+            lastPowDifficulty = difficulty;
+
             difficultyElement.innerText = difficulty + fmtHexAsDecimal(difficulty);
+            difficultyElement.dataset.rawDifficulty = difficulty;
             difficultyElement.dataset.tooltip = `Raw Difficulty Value: ${difficulty}`;
+
             // Update IP log with new PoW difficulty
             const ipElement = document.getElementById("ip-address");
             if (ipElement) {
@@ -407,22 +445,37 @@
                 ipElement.dataset.tooltip = ipContainerTooltip;
               }
             }
+
+            updateProgressBars(difficulty);
+          } else if (lastPowDifficulty) {
+            // Keep showing last value
+            updateProgressBars(lastPowDifficulty);
+            difficultyElement.dataset.tooltip =
+              "No difficulty in latest response; keeping previous value.";
           } else {
             difficultyElement.innerText = "N/A";
+            difficultyElement.dataset.rawDifficulty = "";
             difficultyElement.dataset.tooltip = "No difficulty value found";
+            updateProgressBars("N/A");
           }
         }
+
         updateUserType(userType || "free");
-        updateProgressBars(difficulty || "N/A");
       } catch (error) {
         console.error("Error processing chat requirements:", error);
         const difficultyElement = document.getElementById("difficulty");
         if (difficultyElement) {
-          difficultyElement.innerText = "N/A";
-          difficultyElement.dataset.tooltip = `Error: ${error.message}`;
+          if (lastPowDifficulty) {
+            difficultyElement.dataset.tooltip = `Error: ${error.message} (kept last value)`;
+            updateProgressBars(lastPowDifficulty);
+          } else {
+            difficultyElement.innerText = "N/A";
+            difficultyElement.dataset.rawDifficulty = "";
+            difficultyElement.dataset.tooltip = `Error: ${error.message}`;
+            updateProgressBars("N/A");
+          }
         }
         updateUserType("free");
-        updateProgressBars("N/A");
       }
     }
     if (isAccountsCheck) {
@@ -1179,7 +1232,10 @@
 
       // Update IP logs
       const difficultyElement = document.getElementById("difficulty");
-      const currentDifficulty = difficultyElement?.innerText || "N/A";
+      const currentDifficulty =
+        difficultyElement?.dataset.rawDifficulty ||
+        difficultyElement?.innerText ||
+        "N/A";
       const logs = addIPLog(fullIP, score, currentDifficulty);
       const formattedLogs = formatIPLogs(logs);
       const ipContainerTooltip = [
